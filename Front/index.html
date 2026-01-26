@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PicLog</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+
+<body>
+    <header>
+        <h1>PicLog</h1>
+    </header>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>menu</h2>
+            <nav>
+                <div id="sidebarMenu">
+                    <div>
+                        <a href="#/calendar" data-section="calendar" id="calendarBtn">Calendar</a>
+                    </div>
+                    <div>
+                        <a href="#/frequency" data-section="frequency" id="frequencyBtn">Frequency</a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+        <!-- Main -->
+        <main class="main">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="menuToggle" class="menu-btn">☰</button>
+                </div>
+                <nav class="navbar">
+                    <div>
+                        <a href="#/calendar" data-section="calendar" class="nav-link">Calendar</a>
+                    </div>
+                    <div>
+                        <a href="#/frequency" data-section="frequency" class="nav-link">Frequency</a>
+                    </div>
+                </nav>
+                <div class="user-info">
+                </div>
+                <!--
+                <div class="user-info">
+                    <span class="bell">🔔</span>
+                    
+                    <img src="https://via.placeholder.com/32" alt="User Avatar" class="avatar" />
+                    
+                    <span id="userNameDisplay"></span>
+                    <button id="logoutBtn" class="logout-btn">登出</button>
+                </div>
+                -->
+                <div class="topbar-right">
+                    <button id="themeToggle" class="theme-btn">🌓</button>
+                </div>
+            </header>
+
+            <!--Calender Section-->
+            <div id="calendarSection" class="content" style="display: none;">
+                <div class="table-header">
+                    <h2>CALENDAR</h2>
+                    <div class="left-action">
+                        <div id="MYPicker">
+                            <button id="prevMonth" class="arrow-btn">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <div class="custom-select-container">
+                                <div id="monthLabel" class="selected-value">01</div>
+                                <div id="monthOptions" class="options-list">
+                                    </div>
+                            </div>
+
+                            <div class="custom-select-container">
+                                <div id="yearLabel" class="selected-value">2026</div>
+                                <div id="yearOptions" class="options-list">
+                                    </div>
+                            </div>
+                            <button id="nextMonth" class="arrow-btn">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                            <input type="hidden" id="calendarDate">
+                        </div>
+                    </div>
+                    <div class="right-action">
+                        <button id="openModal" class="btn-style">+</button>
+                    </div>
+                </div>
+                <div id="calendar" class="calendar-grid">
+                    <div class="day-name">Sun</div>
+                    <div class="day-name">Mon</div>
+                    <div class="day-name">Tue</div>
+                    <div class="day-name">Wed</div>
+                    <div class="day-name">Thu</div>
+                    <div class="day-name">Fri</div>
+                    <div class="day-name">Sat</div>
+                </div>
+
+                <div id="uploadModal" class="modal">
+                    <div class="modal-content">
+                        <h3>Upload to PicLog</h3>
+                        <input type="date" id="logDate">
+                        <input type="file" id="photoInput" accept="image/*">
+                        <!--
+                        <input type="range" id="intensity" min="1" max="10" value="5">
+                        <label>Intensity: <span id="val">5</span></label>
+                        -->
+                        <div class="form-buttons">
+                            <button id="saveBtn" class ="btn-style">Save</button>
+                            <button id="closeModal" class ="btn-style">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <footer class="site-footer">
+                <div class="footer-content">
+                    <p>© 2026 thetomiishere | PicLog</p>
+                    <div class="social-links">
+                        <a href="https://instagram.com/thetomiishere" target="_blank" rel="noopener noreferrer">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a href="https://x.com/thetomiishere" target="_blank" rel="noopener noreferrer">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                    </div>
+                </div>
+            </footer>
+
+        </main>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
