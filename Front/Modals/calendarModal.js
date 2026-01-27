@@ -1,4 +1,4 @@
-import { addCell } from '../Services/calendarService.js';
+import { addCell, hasPhoto } from '../Services/calendarService.js';
 
 export function addwDate(calendarID, dateString) {
     const modal = document.getElementById('uploadModal');
@@ -16,26 +16,28 @@ export function addwDate(calendarID, dateString) {
                 alert("Please select a photo!");
                 return;
             }
-            const targetCell = document.getElementById(`cell-${selectedDate}`);
-            const isOccupied = targetCell && (
-                targetCell.getAttribute('data-has-photo') === 'true' || 
-                (targetCell.style.backgroundImage && targetCell.style.backgroundImage !== 'none' && targetCell.style.backgroundImage !== "")
-            );
+
+            const isOccupied = await hasPhoto(calendarID, selectedDate);
             if (isOccupied) {
-                alert(`${selectedDate} 已經有檔案囉！請先刪除舊照片。`);
+                alert(`${selectedDate} 已經有照片囉！`);
+                resetInput();
+                modal.style.display = "none";
+                resolve({ success: false, reason: 'occupied' });
                 return;
             }
-            
+
             const compressedBase64 = await compressImage(file);
             const result = await addCell(calendarID, selectedDate, compressedBase64);
 
             if (result.success) {
+                resetInput();
                 modal.style.display = "none";
                 resolve(result);
             }
         };
 
         document.getElementById('closeModal').onclick = () => {
+            resetInput();
             modal.style.display = "none";
             resolve({ success: false });
         };
@@ -63,4 +65,9 @@ function compressImage(file) {
             };
         };
     });
+}
+
+function resetInput() {
+    const photoInput = document.getElementById('photoInput');
+    if (photoInput) photoInput.value = ""; 
 }
