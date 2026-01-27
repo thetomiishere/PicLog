@@ -1,5 +1,7 @@
-import { addCalendarModal, addwDate } from '../Modals/calendarModal.js';
-import { calendarService } from '../Services/calendarService.js';
+import { addwDate } from '../Modals/calendarModal.js';
+import { calendarService, deleteCell } from '../Services/calendarService.js';
+
+const currentTable = "table1";
 
 let currentDisplayDate = new Date();
 let dateState = {
@@ -8,6 +10,11 @@ let dateState = {
 };
 
 export async function calendar() {
+    const calendarTitle = document.getElementById('calendarTitle');
+    if (calendarTitle) {
+        calendarTitle.innerHTML = currentTable.toUpperCase();
+    }
+
     const monthLabel = document.getElementById('monthLabel'); 
     const yearLabel = document.getElementById('yearLabel');
     const dateInput = document.getElementById('calendarDate');
@@ -50,7 +57,7 @@ export async function calendar() {
     openBtn.onclick = async () => {
         const now = new Date();
         const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const result = await addwDate(today);
+        const result = await addwDate(currentTable, today);
         if (result.success) {
             await renderCalendar(dateState.year, dateState.month);
         }
@@ -67,8 +74,8 @@ export async function updateDate(monthLabel, yearLabel, dateInput) {
     
     const displayMonth = String(dateState.month + 1).padStart(2, '0');
     
-    if(monthLabel) monthLabel.value = dateState.month;
-    if(yearLabel) yearLabel.value = dateState.year;
+    if(monthLabel) monthLabel.textContent = displayMonth;
+    if(yearLabel) yearLabel.textContent = dateState.year;
     if(dateInput) dateInput.value = `${dateState.year}-${displayMonth}`;
 }
 
@@ -143,15 +150,17 @@ export async function renderCalendar(year, month) {
         cell.innerHTML = `<span>${day}</span>`;
         cell.onclick = async () => {
             const hasPhoto = cell.style.backgroundImage && cell.style.backgroundImage !== 'none';
-
             if (hasPhoto) {
-                const confirmOverwrite = confirm("Do you wanna replace it?");
-                if (!confirmOverwrite) {
+                const confirmOverwrite = confirm("Do you wanna delete and replace it?");
+                if (confirmOverwrite) {
+                    const result = await deleteCell(currentTable, dateString);
+                    if (result.success) {
+                        await renderCalendar(dateState.year, dateState.month);
+                    }
                     return;
                 }
             }
-            console.log(dateString);
-            const result = await addwDate(dateString);
+            const result = await addwDate(currentTable, dateString);
             if (result.success) {
                 await renderCalendar(dateState.year, dateState.month);
             }
@@ -161,11 +170,11 @@ export async function renderCalendar(year, month) {
     }
 
     try {
-        const entries = await calendarService(month + 1, year);
+        const response = await calendarService(currentTable, month + 1, year);
         
-        if (entries && Array.isArray(entries)) {
-            entries.forEach(entry => {
-                updateCell(entry.date, entry.imageUrl, entry.intensity);
+        if (response.success && Array.isArray(response.data)) {
+            response.data.forEach(entry => {
+                populateCell(entry.date, entry.imageUrl);
             });
         }
     } catch (error) {
@@ -173,23 +182,14 @@ export async function renderCalendar(year, month) {
     }
 }
 
-export function updateCell(dateString, imageUrl, intensity) {
-    const parts = dateString.split('-');
-    const y = parseInt(parts[0]);
-    const m = parseInt(parts[1]);
-    const d = parseInt(parts[2]);
-    
-    const targetCell = document.getElementById(`cell-${y}-${m}-${d}`);
+export function populateCell(dateString, imageUrl) {    
+    const targetCell = document.getElementById(`cell-${dateString}`);
 
     if (targetCell) {
         targetCell.style.backgroundImage = `url(${imageUrl})`;
-        
-        let overlay = targetCell.querySelector('.intensity-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'intensity-overlay';
-            targetCell.appendChild(overlay);
-        }
-        overlay.style.backgroundColor = `rgba(0, 122, 255, ${intensity / 10})`;
+        targetCell.style.backgroundSize = "cover";
+        targetCell.style.backgroundPosition = "center";
+    } else {
+        console.error(`Error: Could not find cell with ID cell-${dateString}`);
     }
 }

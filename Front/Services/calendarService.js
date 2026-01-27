@@ -1,70 +1,70 @@
+import { db } from '../Configs/firebaseConfig.js';
+import { doc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-export const calendarService = async (filters = {}) => {
-    const response = {
-        success: true,
-        imageUrl: "URL.createObjectURL(file)"
-    };
-    return response;
-    const API_URL = await loadUrl() + suffix;
-    const queryParts = [];
-    for (const key in filters) {
-        const value = filters[key];
-
-        if (Array.isArray(value)) {
-            if (value.length > 0) {
-                queryParts.push(`${key}=${value.join('+')}`);
-            }
-        } else if (value !== undefined && value !== "") {
-            queryParts.push(`${key}=${encodeURIComponent(value)}`);
-        }
-    }
-    //console.log(filters);
-    const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : "";
-    const url = `${API_URL}${queryString}`;
-    try {
-        const response = await fetch(url, { method: 'GET' });
-        //console.log(await response.text());
-        if (!response.ok) throw new Error('Failed to fetch files');
-        return await response.json();
+export async function calendarService(calendarID, month, year) {
+    // const response = {
+    //     success: true,
+    //     imageUrl: "URL.createObjectURL(file)"
+    // };
+    // return response;
+    const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+    const entriesRef = collection(db, 'calendars', calendarID, 'entries');
+    
+    const q = query(entriesRef, 
+        where("date", ">=", `${monthStr}-01`),
+        where("date", "<=", `${monthStr}-31`)
+    );
+    try{
+        const response = await getDocs(q);
+        const entries = response.docs.map(doc => doc.data());
+        return {success: true, data: entries};
     } catch (err) {
-        console.error('Error in getFiles:', err);
-        throw err;
+        console.error("Load failed: ", err);
+        return { success: false, data: [] };
+    }
+}
+
+export async function addCell (calendarID, dateString, file) {
+    // const response = {
+    //     success: true,
+    //     imageUrl: "URL.createObjectURL(file)"
+    // };
+    // return response;
+    try {
+        const docRef = doc(db, 'calendars', calendarID, 'entries', dateString);
+        const newEntry = {
+            imageUrl: file,
+            date: dateString,
+            updatedAt: new Date().toISOString()
+        };
+        await setDoc(docRef, newEntry);
+        return { success: true, data: newEntry };
+    } catch (err) {
+        console.error("Save failed: ", err);
+        return { success: false };
     }
 };
 
-export const addCell = async (date, file) => {
-    const response = {
-        success: true,
-        imageUrl: "URL.createObjectURL(file)"
-    };
-    return response;
-    console.log("Service: Uploading to Firebase...", { date, file, intensity });
-    
-    return {
-        success: true,
-        imageUrl: URL.createObjectURL(file),
-        intensity: intensity
-    };
-};
+export async function deleteCell(calendarID, dateString) {
+    try {
+        const docRef = doc(db, 'calendars', calendarID, 'entries', dateString);
+        await deleteDoc(docRef);
+        return { success: true };
+    } catch (err) {
+        console.error("Delete failed: ", err);
+        return { success: false };
+    }
+}
 
-export const uploadEntry = async (file) => {
-    return;
-    console.log("Service: Uploading to Firebase...", { date, file, intensity });
-    
-    return {
-        success: true,
-        imageUrl: URL.createObjectURL(file),
-        intensity: intensity
-    };
-};
 
-export const fetchEntries = async (month, year) => {
-    return;
-    console.log("Service: Uploading to Firebase...", { date, file, intensity });
+// export const uploadEntry = async (file) => {
+//     return;
+//     console.log("Service: Uploading to Firebase...", { date, file, intensity });
     
-    return {
-        success: true,
-        imageUrl: URL.createObjectURL(file),
-        intensity: intensity
-    };
-};
+//     return {
+//         success: true,
+//         imageUrl: URL.createObjectURL(file),
+//         intensity: intensity
+//     };
+// };
