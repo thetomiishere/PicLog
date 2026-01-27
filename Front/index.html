@@ -23,6 +23,10 @@
                     <div>
                         <a href="#/frequency" data-section="frequency" id="frequencyBtn">Frequency</a>
                     </div>
+                    <hr>
+                    <div class="add-calendar-container">
+                        <button id="addCalendarBtn" class="btn-style">+ New Calendar</button>
+                    </div>
                 </div>
             </nav>
         </aside>
@@ -60,8 +64,13 @@
             <!--Calender Section-->
             <div id="calendarSection" class="content" style="display: none;">
                 <div class="table-header">
-                    <h2 id="calendarTitle">CALENDAR</h2>
-                    <div class="left-action">
+                    <div class="left-actions">
+                        <h2 id="calendarTitle">CALENDAR</h2>
+                        <button id="deleteCalendarBtn" class="btn-style-red" title="Delete calendar">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <div class="center-actions">
                         <div id="MYPicker">
                             <button id="prevMonth" class="arrow-btn">
                                 <i class="fa-solid fa-chevron-left"></i>
@@ -82,7 +91,7 @@
                             <input type="hidden" id="calendarDate">
                         </div>
                     </div>
-                    <div class="right-action">
+                    <div class="right-actions">
                         <button id="openModal" class="btn-style">+</button>
                     </div>
                 </div>

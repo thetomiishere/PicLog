@@ -162,12 +162,24 @@ header {
     font-size: 1.2rem;
 }
 
-.btn-style:hover {
+.btn-style-red {
+    background: #bd3d3d;
+    color: var(--text-main);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.btn-style:hover,
+.btn-style-red:hover {
   opacity: 0.85;
   transform: translateY(-1px);
 }
 
-.btn-style:active {
+.btn-style:active,
+.btn-style-red:active {
   transform: translateY(0);
 }
 
@@ -249,16 +261,40 @@ body.dark-mode .sidebar nav a.active {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    width: 100%;
+}
+
+#calendarTitle {
+    font-size: 2rem;
+    margin: 0 !important; 
+    white-space: nowrap;
+    align-items: center;
+}
+
+.left-actions, 
+.center-actions, 
+.right-actions {
+    flex: 1;
+    display: flex;
+    align-items: center;
 }
 
 .left-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.center-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
 .right-actions {
-  margin-left: auto; /* 👈 pushes to right end */
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
 }
 
 /* Calendar Style */
@@ -285,7 +321,8 @@ body.dark-mode .sidebar nav a.active {
     border: 1px solid var(--border);
     border-radius: 8px;
     position: relative;
-    background-size: cover;
+    background-size: 100% auto;
+    background-repeat: no-repeat;
     background-position: center;
     background-color: var(--cell-bg);
 }

@@ -1,7 +1,7 @@
 import { addwDate } from '../Modals/calendarModal.js';
 import { calendarService, deleteCell } from '../Services/calendarService.js';
 
-const currentTable = "table1";
+let currentTable = "";
 
 let currentDisplayDate = new Date();
 let dateState = {
@@ -9,7 +9,8 @@ let dateState = {
     month: currentDisplayDate.getMonth()
 };
 
-export async function calendar() {
+export async function calendar(calendarID = "table1") {
+    currentTable = calendarID;
     const calendarTitle = document.getElementById('calendarTitle');
     if (calendarTitle) {
         calendarTitle.innerHTML = currentTable.toUpperCase();
@@ -149,20 +150,22 @@ export async function renderCalendar(year, month) {
         cell.id = `cell-${dateString}`;
         cell.innerHTML = `<span>${day}</span>`;
         cell.onclick = async () => {
-            const hasPhoto = cell.style.backgroundImage && cell.style.backgroundImage !== 'none';
+            const hasPhoto = cell.getAttribute('data-has-photo') === 'true';
             if (hasPhoto) {
                 const confirmOverwrite = confirm("Do you wanna delete and replace it?");
                 if (confirmOverwrite) {
                     const result = await deleteCell(currentTable, dateString);
                     if (result.success) {
+
                         await renderCalendar(dateState.year, dateState.month);
                     }
                     return;
                 }
-            }
-            const result = await addwDate(currentTable, dateString);
-            if (result.success) {
-                await renderCalendar(dateState.year, dateState.month);
+            } else {
+                const result = await addwDate(currentTable, dateString);
+                if (result.success) {
+                    await renderCalendar(dateState.year, dateState.month);
+                }
             }
         };
 
@@ -187,9 +190,10 @@ export function populateCell(dateString, imageUrl) {
 
     if (targetCell) {
         targetCell.style.backgroundImage = `url(${imageUrl})`;
-        targetCell.style.backgroundSize = "cover";
-        targetCell.style.backgroundPosition = "center";
+        targetCell.setAttribute('data-has-photo', 'true');
     } else {
+        targetCell.style.backgroundImage = 'none';
+        targetCell.removeAttribute('data-has-photo');
         console.error(`Error: Could not find cell with ID cell-${dateString}`);
     }
 }

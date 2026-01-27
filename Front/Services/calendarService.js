@@ -1,6 +1,6 @@
 import { db } from '../Configs/firebaseConfig.js';
 import { doc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { setDoc, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export async function calendarService(calendarID, month, year) {
     // const response = {
@@ -32,13 +32,21 @@ export async function addCell (calendarID, dateString, file) {
     // };
     // return response;
     try {
-        const docRef = doc(db, 'calendars', calendarID, 'entries', dateString);
+        const batch = writeBatch(db);
+        const parentDocRef = doc(db, 'calendars', calendarID);
+        batch.set(parentDocRef, { exists: true }, { merge: true });
+
+        // const docRef = doc(db, 'calendars', calendarID, 'entries', dateString);
+        // batch.set(docRef, { lastUpdated: new Date().toISOString() }, { merge: true });
+        const entryRef = doc(db, 'calendars', calendarID, 'entries', dateString);
         const newEntry = {
             imageUrl: file,
             date: dateString,
             updatedAt: new Date().toISOString()
         };
-        await setDoc(docRef, newEntry);
+        batch.set(entryRef, newEntry);
+        await batch.commit();
+        // await setDoc(docRef, newEntry);
         return { success: true, data: newEntry };
     } catch (err) {
         console.error("Save failed: ", err);
