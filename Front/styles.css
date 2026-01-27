@@ -264,7 +264,8 @@ body.dark-mode .sidebar nav a.active {
     width: 100%;
 }
 
-#calendarTitle {
+#calendarTitle,
+#freqTitle {
     font-size: 2rem;
     margin: 0 !important; 
     white-space: nowrap;
@@ -306,6 +307,15 @@ body.dark-mode .sidebar nav a.active {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.frequency-mode .calendar-day {
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: rgba(0,0,0,0.5);
 }
 
 .day-name { 
@@ -377,6 +387,7 @@ body.dark-mode .sidebar nav a.active {
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
+    font-size: 1.4rem;
 }
 
 .modal-actions {
@@ -440,7 +451,8 @@ body.dark-mode .modal-content input::-webkit-calendar-picker-indicator {
     border: 1px solid var(--border);
 }
 */
-#MYPicker {
+#MYPicker,
+#FreqPicker {
     display: flex;
     align-items: center;
     gap: 15px;

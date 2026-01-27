@@ -1,4 +1,5 @@
 import { addwDate } from '../Modals/calendarModal.js';
+import { populateOptions, updateDate } from './trivia.js';
 import { calendarService, deleteCell } from '../Services/calendarService.js';
 
 let currentTable = "";
@@ -9,7 +10,7 @@ let dateState = {
     month: currentDisplayDate.getMonth()
 };
 
-export async function calendar(calendarID = "table1") {
+export async function calendar(calendarID) {
     currentTable = calendarID;
     const calendarTitle = document.getElementById('calendarTitle');
     if (calendarTitle) {
@@ -18,13 +19,12 @@ export async function calendar(calendarID = "table1") {
 
     const monthLabel = document.getElementById('monthLabel'); 
     const yearLabel = document.getElementById('yearLabel');
-    const dateInput = document.getElementById('calendarDate');
     const prevBtn = document.getElementById('prevMonth');
     const nextBtn = document.getElementById('nextMonth');
     const openBtn = document.getElementById('openModal');
 
-    populateOptions('monthOptions', 0, 11, true);
-    populateOptions('yearOptions', 2020, 2030, false);
+    populateOptions('monthOptions', 0, 11, true, dateState, currentDisplayDate, handleRefresh);
+    populateOptions('yearOptions', 2020, 2030, false, dateState, currentDisplayDate, handleRefresh);
     
     monthLabel.onclick = (e) => {
         e.stopPropagation();
@@ -45,13 +45,13 @@ export async function calendar(calendarID = "table1") {
 
     prevBtn.onclick = async () => {
         currentDisplayDate.setMonth(currentDisplayDate.getMonth() - 1);
-        await updateDate(monthLabel, yearLabel, dateInput);
+        await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);
         await renderCalendar(dateState.year, dateState.month);
     };
 
     nextBtn.onclick = async () => {
         currentDisplayDate.setMonth(currentDisplayDate.getMonth() + 1);
-        await updateDate(monthLabel, yearLabel, dateInput);
+        await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);
         await renderCalendar(dateState.year, dateState.month);
     };
 
@@ -64,57 +64,9 @@ export async function calendar(calendarID = "table1") {
         }
     };
 
-    await updateDate(monthLabel, yearLabel, dateInput);
+    await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);
     await renderCalendar(dateState.year, dateState.month);
 
-}
-
-export async function updateDate(monthLabel, yearLabel, dateInput) {
-    dateState.year = currentDisplayDate.getFullYear();
-    dateState.month = currentDisplayDate.getMonth();
-    
-    const displayMonth = String(dateState.month + 1).padStart(2, '0');
-    
-    if(monthLabel) monthLabel.textContent = displayMonth;
-    if(yearLabel) yearLabel.textContent = dateState.year;
-    if(dateInput) dateInput.value = `${dateState.year}-${displayMonth}`;
-}
-
-function populateOptions(elementId, start, end, isMonth = false) {
-    const container = document.getElementById(elementId);
-    container.innerHTML = '';
-    
-    for (let i = start; i <= end; i++) {
-        const div = document.createElement('div');
-        div.className = 'option-item';
-        
-        const isCurrentMonth = isMonth && i === dateState.month;
-        const isCurrentYear = !isMonth && i === dateState.year;
-
-        if (isCurrentMonth || isCurrentYear) {
-            div.classList.add('selected');
-        }
-
-        div.textContent = isMonth ? String(i + 1).padStart(2, '0') : i;
-        
-        div.onclick = async () => {
-            if (isMonth) currentDisplayDate.setMonth(i);
-            else currentDisplayDate.setFullYear(i);
-            
-            container.classList.remove('active');
-            
-            const mLabel = document.getElementById('monthLabel');
-            const yLabel = document.getElementById('yearLabel');
-            const dInput = document.getElementById('calendarDate');
-
-            await updateDate(mLabel, yLabel, dInput);
-            await renderCalendar(dateState.year, dateState.month);
-            
-            populateOptions('monthOptions', 0, 11, true);
-            populateOptions('yearOptions', 2020, 2030, false);
-        };
-        container.appendChild(div);
-    }
 }
 
 export async function renderCalendar(year, month) {
@@ -156,7 +108,6 @@ export async function renderCalendar(year, month) {
                 if (confirmOverwrite) {
                     const result = await deleteCell(currentTable, dateString);
                     if (result.success) {
-
                         await renderCalendar(dateState.year, dateState.month);
                     }
                     return;
@@ -197,3 +148,11 @@ export function populateCell(dateString, imageUrl) {
         console.error(`Error: Could not find cell with ID cell-${dateString}`);
     }
 }
+
+const handleRefresh = async () => {
+    await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);
+    await renderCalendar(dateState.year, dateState.month);
+    // Refresh the dropdown lists to show new 'selected' state
+    populateOptions('monthOptions', 0, 11, true, dateState, currentDisplayDate, handleRefresh);
+    populateOptions('yearOptions', 2020, 2030, false, dateState, currentDisplayDate, handleRefresh);
+};

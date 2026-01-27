@@ -10,3 +10,13 @@ export async function getAllCalendars() {
         return [];
     }
 }
+
+export async function getAllFrequencies() {
+    try {
+        const response = await getDocs(collection(db, "frequencies"));
+        return response.docs.map(doc => doc.id);
+    } catch (err) {
+        console.error("Error fetching calendars:", err);
+        return [];
+    }
+}
