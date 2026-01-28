@@ -12,10 +12,10 @@ let dateState = {
 
 export async function frequency(freqID) {
     currentTable = freqID;
-    const freqTitle = document.getElementById('freqTitle');
-    if (freqTitle) {
-        freqTitle.innerHTML = currentTable.toUpperCase();
-    }
+    // const freqTitle = document.getElementById('freqTitle');
+    // if (freqTitle) {
+    //     freqTitle.innerHTML = currentTable.toUpperCase();
+    // }
 
     const monthLabel = document.getElementById('monthLabelFreq'); 
     const yearLabel = document.getElementById('yearLabelFreq');

@@ -12,10 +12,10 @@ let dateState = {
 
 export async function calendar(calendarID) {
     currentTable = calendarID;
-    const calendarTitle = document.getElementById('calendarTitle');
-    if (calendarTitle) {
-        calendarTitle.innerHTML = currentTable.toUpperCase();
-    }
+    // const calendarTitle = document.getElementById('calendarTitle');
+    // if (calendarTitle) {
+    //     calendarTitle.innerHTML = currentTable.toUpperCase();
+    // }
 
     const monthLabel = document.getElementById('monthLabel'); 
     const yearLabel = document.getElementById('yearLabel');

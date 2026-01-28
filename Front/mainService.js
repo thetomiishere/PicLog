@@ -26,6 +26,7 @@ export async function newTable(collectionName, id, data, username) {
     try {
         await setDoc(doc(db, collectionName, id), {
             ...data,
+            createdBy: username,
             createdAt: new Date().toISOString()
         });
 
@@ -48,13 +49,12 @@ export async function deleteTable(collectionName, id, username) {
         const docRef = doc(db, collectionName, id);
         await deleteDoc(docRef);
 
-        if (username) {
+        if (username && username !== 'admin') {
             const userRef = doc(db, 'users', username);
             await updateDoc(userRef, {
                 allowedTables: arrayRemove(id)
             });
         }
-
         return { success: true };
     } catch (error) {
         console.error(`Error deleting from ${collectionName}:`, error);

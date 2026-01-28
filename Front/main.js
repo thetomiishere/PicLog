@@ -1,13 +1,16 @@
 // import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 const session = JSON.parse(localStorage.getItem("currentUser"));
-
+const EXPIRATION_TIME = 24 * 60 * 60 * 1000;
 if (!session) {
     window.location.href = "login.html";
 } else {
-    console.log(`Welcome back, ${session.username}`);
-    
-    if (session.role !== "admin") {
-        document.getElementById('addUserBtn').style.display = 'none';
+    const now = new Date().getTime();
+    if (now - session.loginTime > EXPIRATION_TIME) {
+        alert("Session expired. Please login again.");
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
+    } else {
+        console.log(`Welcome back, ${session.username}`);
     }
 }
 
@@ -85,8 +88,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (adminTools) adminTools.style.display = 'none';
         if (addUserBtn) addUserBtn.style.display = 'none';
     }
-    // navbar
-    await updateNavbar();
+    // sidebar
+    await updateSidebar();
 
     const allCals = await getAllCalendars();
     const allFreqs = await getAllFrequencies();
@@ -115,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 session.allowedTables.push(id);
                 localStorage.setItem("currentUser", JSON.stringify(session));
             }
-            await updateNavbar();
+            await updateSidebar();
             window.location.hash = `#/calendar/${id}`;
         }
     };
@@ -132,7 +135,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 session.allowedTables.push(id);
                 localStorage.setItem("currentUser", JSON.stringify(session));
             }
-            await updateNavbar();
+            await updateSidebar();
             window.location.hash = `#/frequency/${id}`;
         }
     };
@@ -147,7 +150,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     localStorage.setItem("currentUser", JSON.stringify(session));
                 }
                 alert("Deleted successfully.");
-                await updateNavbar();
+                await updateSidebar();
                 window.location.hash = '';
             }
         }
@@ -163,7 +166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     localStorage.setItem("currentUser", JSON.stringify(session));
                 }
                 alert("Deleted successfully.");
-                await updateNavbar();
+                await updateSidebar();
                 window.location.hash = '';
             }
         }
@@ -193,10 +196,16 @@ function closeSidebar() {
 function handleHashChange() {
     const hash = window.location.hash;
     if (!hash || hash === "#") return;
+    const titleDisplay = document.getElementById('currentPageTitle');
     const targetId = hash.split('/').pop();
+    const cleanTitle = targetId.replace(/_/g, ' ').toUpperCase();
+    
+    if (titleDisplay) {
+        titleDisplay.textContent = cleanTitle;
+    }
 
     if (session.role !== 'admin' && !session.allowedTables.includes(targetId)) {
-        alert("No permission to view this table.");
+        alert("No permission.");
         window.location.hash = "";
         return;
     }
@@ -241,26 +250,36 @@ function hideAllSections() {
     });
 }
 
-async function updateNavbar() {
-    const navbar = document.querySelector('.navbar');
-    if (!navbar || !session) return;
+async function updateSidebar() {
+    const sidebarMenu = document.getElementById('sidebarMenu');
+    if (!sidebarMenu || !session) return;
 
-    const allCals = await getAllCalendars();
-    const allFreqs = await getAllFrequencies();
+    sidebarMenu.innerHTML = '';
+    const [allCals, allFreqs] = await Promise.all([
+        getAllCalendars(),
+        getAllFrequencies()
+    ]);
+    // const allCals = await getAllCalendars();
+    // const allFreqs = await getAllFrequencies();
 
     const calendars = session.role === 'admin' ? allCals : allCals.filter(id => session.allowedTables.includes(id));
     const frequencies = session.role === 'admin' ? allFreqs : allFreqs.filter(id => session.allowedTables.includes(id));
 
-    navbar.innerHTML = '';
+    if (calendars.length === 0 && frequencies.length === 0) {
+        sidebarMenu.innerHTML = '<p style="padding:10px; font-size:0.8rem; opacity:0.5;">No tables available</p>';
+        return;
+    }
+
     frequencies.forEach(id => {
         const div = document.createElement('div');
         div.innerHTML = `<a href="#/frequency/${id}" data-section="frequency" data-id="${id}" class="nav-link">${id.toUpperCase()}</a>`;
-        navbar.appendChild(div);
+        sidebarMenu.appendChild(div);
     });
+
     calendars.forEach(id => {
         const div = document.createElement('div');
         div.innerHTML = `<a href="#/calendar/${id}" data-section="calendar" data-id="${id}" class="nav-link">${id.toUpperCase()}</a>`;
-        navbar.appendChild(div);
+        sidebarMenu.appendChild(div);
     });
 }
 

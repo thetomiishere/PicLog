@@ -1,7 +1,28 @@
 import { db } from '../Configs/firebaseConfig.js';
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+
 const loginBtn = document.getElementById('loginBtn');
+const pwdInput = document.getElementById('pwd');
+const accInput = document.getElementById('acc');
+const showPwdCheckbox = document.getElementById('showPwd');
+
+showPwdCheckbox.onchange = () => {
+    pwdInput.type = showPwdCheckbox.checked ? 'text' : 'password';
+};
+
+// 3. Hit Enter to Login
+[accInput, pwdInput].forEach(input => {
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            loginBtn.click();
+        }
+    });
+});
 
 loginBtn.onclick = async () => {
     const username = document.getElementById('acc').value.trim().toLowerCase();
@@ -17,11 +38,12 @@ loginBtn.onclick = async () => {
 
             if (userData.password === password) {
                 // SUCCESS! 
-                // We "log them in" by saving their info to the browser
+                const now = new Date().getTime();
                 localStorage.setItem("currentUser", JSON.stringify({
                     username: username,
                     role: userData.role,
-                    allowedTables: userData.allowedTables || []
+                    allowedTables: userData.allowedTables || [],
+                    loginTime: now
                 }));
 
                 window.location.href = "index.html"; 

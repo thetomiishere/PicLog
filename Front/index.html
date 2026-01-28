@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PicLog</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗓️</text></svg>">
 </head>
 
 <body>
@@ -54,15 +56,8 @@
                 <div class="topbar-left">
                     <button id="menuToggle" class="menu-btn">☰</button>
                 </div>
-                <nav class="navbar">
-                    <div>
-                        <a href="#/calendar" data-section="calendar" class="nav-link">Calendar</a>
-                    </div>
-                    <div>
-                        <a href="#/frequency" data-section="frequency" class="nav-link">Frequency</a>
-                    </div>
-                </nav>
-                <div class="user-info">
+                <div class="topbar-center">
+                    <span id="currentPageTitle" class="topbar-title"></span>
                 </div>
                 <!--
                 <div class="user-info">
@@ -100,7 +95,7 @@
             <div id="calendarSection" class="content" style="display: none;">
                 <div class="table-header">
                     <div class="left-actions">
-                        <h2 id="calendarTitle">CALENDAR</h2>
+                        <!-- <h2 id="calendarTitle">CALENDAR</h2> -->
                         <button id="deleteCalendarBtn" class="btn-style-red" title="Delete calendar">
                             <i class="fa-regular fa-trash-can"></i>
                         </button>
@@ -160,7 +155,7 @@
             <div id="frequencySection" class="content" style="display: none;">
                 <div class="table-header">
                     <div class="left-actions">
-                        <h2 id="freqTitle">FREQUENCY</h2>
+                        <!-- <h2 id="freqTitle">FREQUENCY</h2> -->
                         <button id="deleteFreqBtn" class="btn-style-red" title="Delete frequency data">
                             <i class="fa-regular fa-trash-can"></i>
                         </button>
