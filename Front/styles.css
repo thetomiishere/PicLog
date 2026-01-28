@@ -231,6 +231,7 @@ header {
     transition: left 0.3s ease-in-out;
     display: flex;
     flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .sidebar.active {
@@ -385,6 +386,7 @@ body.dark-mode .sidebar nav a.active {
     margin-top: auto; 
     padding-top: 15px;
     border-top: 1px solid rgba(0,0,0,0.1);
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 
 /* Calendar Style */
@@ -659,6 +661,7 @@ body.dark-mode #calendarDate::-webkit-calendar-picker-indicator {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    height: 100svh;
     background-color: var(--bg-secondary);
 }
 
@@ -738,6 +741,7 @@ body.dark-mode #calendarDate::-webkit-calendar-picker-indicator {
         left: -100%;
         width: 85%;
         height: 100vh;
+        height: 100svh;
         z-index: 1001;
         transition: left 0.3s ease-in-out;
         display: flex;
