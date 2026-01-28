@@ -1,18 +1,41 @@
+// import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+const session = JSON.parse(localStorage.getItem("currentUser"));
+
+if (!session) {
+    window.location.href = "login.html";
+} else {
+    console.log(`Welcome back, ${session.username}`);
+    
+    if (session.role !== "admin") {
+        document.getElementById('addUserBtn').style.display = 'none';
+    }
+}
+
 import { calendar } from './Pages/calendar.js';
 import { frequency } from './Pages/frequency.js';
-import { getAllCalendars, getAllFrequencies } from './mainService.js';
-import { db } from './Configs/firebaseConfig.js';
-import { doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAllCalendars, getAllFrequencies, newTable, newUser, deleteTable } from './mainService.js';
 
 let currentCalendarID = "";
 let currentFreqID  = "";
 
+export function handleLogout() {
+    localStorage.removeItem("currentUser");
+    window.location.href = "login.html";
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+    const displayUsername = document.getElementById('displayUsername');
+    if (session && displayUsername) {
+        displayUsername.textContent = session.username;
+    }
+    
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
-    const container = document.querySelector('.container');
-    // dark/light mode
     const themeToggle = document.getElementById('themeToggle');
+    const adminTools = document.getElementById('adminOnlyTools');
+    const addUserBtn = document.getElementById('addUserBtn');
+    
+    // dark/light mode
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
@@ -27,115 +50,130 @@ document.addEventListener("DOMContentLoaded", async () => {
     overlay.className = 'sidebar-overlay';
     document.body.appendChild(overlay);
 
-    if (menuToggle) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-            sidebar.classList.add('active');
-            overlay.classList.add('active');
-        });
-    }
+    menuToggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    });
 
     document.addEventListener('click', (e) => {
         if (sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuToggle) {
             closeSidebar();
         }
     });
+
+    document.getElementById('addCalendarBtn').style.display = 'block';
+    document.getElementById('addFreqBtn').style.display = 'block';
+    document.getElementById('deleteCalendarBtn').style.display = 'block';
+    document.getElementById('deleteFreqBtn').style.display = 'block';
+    // add user
+    if (session.role === 'admin') {
+        if (adminTools) adminTools.style.display = 'block';
+        if (addUserBtn) {
+            addUserBtn.style.display = 'block';
+            addUserBtn.onclick = async () => {
+                closeSidebar();
+                const username = prompt("Username:").toLowerCase().trim();
+                const password = prompt("Password:");
+                if (username && password) {
+                    const res = await newUser(username, password);
+                    if (res.success) alert("User Created!");
+                }
+            };
+        }
+    } else {
+        if (adminTools) adminTools.style.display = 'none';
+        if (addUserBtn) addUserBtn.style.display = 'none';
+    }
     // navbar
     await updateNavbar();
-    const calendars = await getAllCalendars();
-    const frequencies = await getAllFrequencies();
-    if (calendars.length > 0) currentCalendarID = calendars[0];
-    if (frequencies.length > 0) currentFreqID = frequencies[0];
-    if (!window.location.hash || window.location.hash === "#") {
-        if (currentCalendarID) {
-            window.location.hash = `#/calendar/${currentCalendarID}`;
-        } else if (currentFreqID) {
-            window.location.hash = `#/frequency/${currentFreqID}`;
-        }
-    }
-    // add calendar
-    const addCalendarBtn = document.getElementById('addCalendarBtn');
-    if (addCalendarBtn) {
-        addCalendarBtn.onclick = async () => {
-            const name = await getNameFromModal("新增照片 Calendar");
-            if (!name) return;
-            const calendarID = name.toLowerCase().replace(/\s+/g, '_');
-            try {
-                await setDoc(doc(db, 'calendars', calendarID), {
-                    createdAt: new Date().toISOString(),
-                    name: name
-                });
-                await updateNavbar();
-                // alert(`Calendar "${name}" created!`);
-            } catch (err) {
-                console.error("Error creating calendar:", err);
-            }
-        };
-    }
-    // add frequency
-    const addFreqBtn = document.getElementById('addFreqBtn');
-    if (addFreqBtn) {
-        addFreqBtn.onclick = async () => {
-            const result = await getNameFromModal("新增頻率 Tracker", true); 
-            if (!result) return;
-            
-            const { name, color } = result;
-            const freqID = name.toLowerCase().replace(/\s+/g, '_');
 
-            try {
-                await setDoc(doc(db, 'frequencies', freqID), {
-                    createdAt: new Date().toISOString(),
-                    name: name,
-                    color: color
-                });
-                await updateNavbar();
-            } catch (err) {
-                console.error("Error creating frequency:", err);
-            }
-        };
+    const allCals = await getAllCalendars();
+    const allFreqs = await getAllFrequencies();
+    
+    const allowedCals = session.role === 'admin' ? allCals : allCals.filter(id => session.allowedTables.includes(id));
+    const allowedFreqs = session.role === 'admin' ? allFreqs : allFreqs.filter(id => session.allowedTables.includes(id));
+
+    if (allowedCals.length > 0) currentCalendarID = allowedCals[0];
+    if (allowedFreqs.length > 0) currentFreqID = allowedFreqs[0];
+
+    if (!window.location.hash || window.location.hash === "#") {
+        if (currentCalendarID) window.location.hash = `#/calendar/${currentCalendarID}`;
+        else if (currentFreqID) window.location.hash = `#/frequency/${currentFreqID}`;
     }
+
+    // add calendar
+    document.getElementById('addCalendarBtn').onclick = async () => {
+        closeSidebar();
+        const nameData = await getNameFromModal("新增照片 Calendar");
+        if (!nameData) return;
+        const id = nameData.name.toLowerCase().replace(/\s+/g, '_');
+        
+        const res = await newTable('calendars', id, { name: nameData.name }, session.username);
+        if (res.success) {
+            if (session.role !== 'admin') {
+                session.allowedTables.push(id);
+                localStorage.setItem("currentUser", JSON.stringify(session));
+            }
+            await updateNavbar();
+            window.location.hash = `#/calendar/${id}`;
+        }
+    };
+    // add frequency
+    document.getElementById('addFreqBtn').onclick = async () => {
+        closeSidebar();
+        const resModal = await getNameFromModal("新增頻率 Tracker", true);
+        if (!resModal) return;
+        const id = resModal.name.toLowerCase().replace(/\s+/g, '_');
+        
+        const res = await newTable('frequencies', id, { name: resModal.name, color: resModal.color }, session.username);
+        if (res.success) {
+            if (session.role !== 'admin') {
+                session.allowedTables.push(id);
+                localStorage.setItem("currentUser", JSON.stringify(session));
+            }
+            await updateNavbar();
+            window.location.hash = `#/frequency/${id}`;
+        }
+    };
     // delete calendar
-    const deleteCalendarBtn = document.getElementById('deleteCalendarBtn');
-    if (deleteCalendarBtn) {
-        deleteCalendarBtn.onclick = async () => {
-            if (!currentCalendarID) return;
-            const confirmDelete = confirm(`Are you sure you want to delete "${currentCalendarID.toUpperCase()}"? This cannot be undone.`);
-            
-            if (confirmDelete) {
-                try {
-                    await deleteDoc(doc(db, 'calendars', currentCalendarID));
-                    alert("Calendar deleted successfully.");
-                    await updateNavbar();
-                    window.location.hash = '';
-                    
-                } catch (err) {
-                    console.error("Error deleting calendar:", err);
-                    alert("Failed to delete calendar.");
+    document.getElementById('deleteCalendarBtn').onclick = async () => {
+        if (!currentCalendarID) return;
+        if (confirm(`Sure you wanna delete "${currentCalendarID.toUpperCase()}"?`)) {
+            const res = await deleteTable('calendars', currentCalendarID, session.username);
+            if (res.success) {
+                if (session.role !== 'admin') {
+                    session.allowedTables = session.allowedTables.filter(t => t !== currentCalendarID);
+                    localStorage.setItem("currentUser", JSON.stringify(session));
                 }
+                alert("Deleted successfully.");
+                await updateNavbar();
+                window.location.hash = '';
             }
-        };
-    }
+        }
+    };
     // delete freq
-    const deleteFreqBtn = document.getElementById('deleteFreqBtn');
-    if (deleteFreqBtn) {
-        deleteFreqBtn.onclick = async () => {
-            if (!currentFreqID) return;
-            const confirmDelete = confirm(`Are you sure you want to delete "${currentFreqID.toUpperCase()}"? This cannot be undone.`);
-            
-            if (confirmDelete) {
-                try {
-                    await deleteDoc(doc(db, 'frequencies', currentFreqID));
-                    alert("Freq deleted successfully.");
-                    await updateNavbar();
-                    window.location.hash = '';
-                    
-                } catch (err) {
-                    console.error("Error deleting freq:", err);
-                    alert("Failed to delete freq.");
+    document.getElementById('deleteFreqBtn').onclick = async () => {
+        if (!currentFreqID) return;
+        if (confirm(`Sure you wanna delete "${currentFreqID.toUpperCase()}"?`)) {
+            const res = await deleteTable('frequencies', currentFreqID, session.username);
+            if (res.success) {
+                if (session.role !== 'admin') {
+                    session.allowedTables = session.allowedTables.filter(t => t !== currentFreqID);
+                    localStorage.setItem("currentUser", JSON.stringify(session));
                 }
+                alert("Deleted successfully.");
+                await updateNavbar();
+                window.location.hash = '';
             }
-        };
-    }
+        }
+    };
+    // logout
+    document.getElementById('logoutBtn').onclick = (e) => {
+        e.preventDefault();
+        handleLogout();
+    };
+
     // load correct page on initial load or hash change
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange();
@@ -154,71 +192,42 @@ function closeSidebar() {
 
 function handleHashChange() {
     const hash = window.location.hash;
+    if (!hash || hash === "#") return;
+    const targetId = hash.split('/').pop();
+
+    if (session.role !== 'admin' && !session.allowedTables.includes(targetId)) {
+        alert("No permission to view this table.");
+        window.location.hash = "";
+        return;
+    }
+
     if (hash.startsWith('#/calendar/')) {
-        const tableId = hash.replace('#/calendar/', ''); 
-        currentCalendarID = tableId;
+        currentCalendarID = targetId;
         showSection('calendar');
-        calendar(tableId);
+        calendar(targetId);
     } else if (hash.startsWith('#/frequency/')) {
-        const freqId = hash.replace('#/frequency/', '');
-        currentFreqID = freqId;
+        currentFreqID = targetId;
         showSection('frequency');
-        frequency(freqId);
-    } else {
-        // default
-        if (currentCalendarID) {
-            showSection('calendar');
-            calendar(currentCalendarID);
-        } else{
-            hideAllSections();
-        }
+        frequency(targetId);
     }
 }
 
 function showSection(section) {
     closeSidebar();
-    const sections = ['calendar', 'frequency'];
-    sections.forEach(id => {
-        const element = document.getElementById(`${id}Section`);
-        if (!element) return;
-        element.style.display = (id === section) ? 'block' : 'none';
+    ['calendar', 'frequency'].forEach(id => {
+        const el = document.getElementById(`${id}Section`);
+        if (el) el.style.display = (id === section) ? 'block' : 'none';
     });
 
-    const allLinks = document.querySelectorAll('.nav-link, [data-section]');
-    const currentHash = window.location.hash;
-    const activeTableId = currentHash.startsWith('#/calendar/') ? currentHash.replace('#/calendar/', '') : null;
-
-    allLinks.forEach(link => {
-        const linkSection = link.getAttribute('data-section');
-        const linkId = link.getAttribute('data-id');
-        let isActive = false;
-        
-        if (linkSection === 'frequency' && section === 'frequency') {
-            isActive = true;
-        } else if (linkSection === 'calendar' && section === 'calendar') {
-            isActive = (linkId)? (linkId === activeTableId) : true;
-            // if (linkId) {
-            //     isActive = (linkId === activeTableId);
-            // } else {
-            //     isActive = true; 
-            // }
-        }
-        if (isActive) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
+    const activeId = window.location.hash.split('/').pop();
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.toggle('active', link.getAttribute('data-id') === activeId);
     });
 
-    const menuItems = document.querySelectorAll('#sidebarMenu a');
-    menuItems.forEach(item => item.classList.remove('active'));
-    const activeItem = document.querySelector(`#sidebarMenu a[data-section="${section}"]`);
-    if (activeItem) activeItem.classList.add('active');
     /*
     const tapeFilePage = document.getElementById('tapeFilePage');
     if (tapeFilePage) tapeFilePage.style.display = 'none';
     */
-
 }
 
 function hideAllSections() {
@@ -234,17 +243,20 @@ function hideAllSections() {
 
 async function updateNavbar() {
     const navbar = document.querySelector('.navbar');
-    const calendars = await getAllCalendars(); 
-    const frequencies = await getAllFrequencies();
-    
-    navbar.innerHTML = ''; 
+    if (!navbar || !session) return;
 
+    const allCals = await getAllCalendars();
+    const allFreqs = await getAllFrequencies();
+
+    const calendars = session.role === 'admin' ? allCals : allCals.filter(id => session.allowedTables.includes(id));
+    const frequencies = session.role === 'admin' ? allFreqs : allFreqs.filter(id => session.allowedTables.includes(id));
+
+    navbar.innerHTML = '';
     frequencies.forEach(id => {
         const div = document.createElement('div');
         div.innerHTML = `<a href="#/frequency/${id}" data-section="frequency" data-id="${id}" class="nav-link">${id.toUpperCase()}</a>`;
         navbar.appendChild(div);
     });
-
     calendars.forEach(id => {
         const div = document.createElement('div');
         div.innerHTML = `<a href="#/calendar/${id}" data-section="calendar" data-id="${id}" class="nav-link">${id.toUpperCase()}</a>`;
@@ -252,56 +264,26 @@ async function updateNavbar() {
     });
 }
 
-// async function updateNavbar() {
-//     const navbar = document.querySelector('.navbar');
-//     const calendars = await getAllCalendars();
-    
-//     navbar.innerHTML = ''; 
-
-//     const freqDiv = document.createElement('div');
-//     freqDiv.innerHTML = `<a href="#/frequency" data-section="frequency" class="nav-link">Frequency</a>`;
-//     navbar.appendChild(freqDiv);
-
-//     calendars.forEach(id => {
-//         const div = document.createElement('div');
-//         const link = document.createElement('a');
-//         link.href = `#/calendar/${id}`;
-//         link.className = 'nav-link';
-//         link.textContent = id.toUpperCase();
-//         link.dataset.section = "calendar";
-//         link.dataset.id = id;
-//         div.appendChild(link);
-//         navbar.appendChild(div);
-//     });
-// }
-
 function getNameFromModal(title, showColor = false) {
     const modal = document.getElementById('createModal');
     const nameInput = document.getElementById('newInputName');
     const colorInput = document.getElementById('newInputColor');
-    const colorContainer = document.getElementById('colorPickerContainer');
-    const confirmBtn = document.getElementById('confirmCreateBtn');
-    const cancelBtn = document.getElementById('cancelCreateBtn');
-
     document.getElementById('createModalTitle').textContent = title;
-    nameInput.value = "";
-    colorInput.value = "#969696";
-    
-    colorContainer.style.display = showColor ? "block" : "none";
+    document.getElementById('colorPickerContainer').style.display = showColor ? "block" : "none";
     
     modal.style.display = "flex";
+    nameInput.value = "";
     nameInput.focus();
 
     return new Promise((resolve) => {
-        confirmBtn.onclick = () => {
+        document.getElementById('confirmCreateBtn').onclick = () => {
             const name = nameInput.value.trim();
             if (name) {
                 modal.style.display = "none";
-                resolve({ name: name, color: colorInput.value });
+                resolve({ name, color: colorInput.value });
             }
         };
-
-        cancelBtn.onclick = () => {
+        document.getElementById('cancelCreateBtn').onclick = () => {
             modal.style.display = "none";
             resolve(null);
         };

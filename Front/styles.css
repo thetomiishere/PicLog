@@ -183,6 +183,27 @@ header {
   transform: translateY(0);
 }
 
+.add-container {
+    width: 100%;
+    padding: 0; 
+    margin-bottom: 8px;
+}
+
+.add-container .btn-style {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 45px;
+    padding: 0 15px;
+    font-size: 1.2rem;
+    white-space: nowrap; 
+}
+
+#adminOnlyTools.add-container {
+    display: block;
+}
+
 .sidebar {
     position: fixed;
     top: 0;
@@ -194,6 +215,8 @@ header {
     padding: 20px;
     z-index: 1001;
     transition: left 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar.active {
@@ -216,12 +239,20 @@ header {
 }
 
 .sidebar h2 {
+    flex-shrink: 0;
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--accent);
     margin-bottom: 30px;
     padding-left: 10px;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
 }
 
 .sidebar nav div {
@@ -249,6 +280,36 @@ header {
     color: #000000 !important;
     font-weight: 700;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.user-footer {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 10px 5px;
+    margin-top: 5px;
+}
+
+.user-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+body:not(.dark-mode) .sidebar nav a:hover {
+    background: #e5e5e5;
+    padding-left: 20px;
+}
+
+body:not(.dark-mode) .add-btn:hover,
+body:not(.dark-mode) .btn-style:hover {
+    background: #7a7a7a;
+    opacity: 1;
 }
 
 body.dark-mode .sidebar nav a.active {
@@ -296,6 +357,18 @@ body.dark-mode .sidebar nav a.active {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
+}
+
+.top-actions {
+    flex: 1; 
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.bottom-actions {
+    margin-top: auto; 
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.1);
 }
 
 /* Calendar Style */
@@ -563,3 +636,77 @@ body.dark-mode select option {
 body.dark-mode #calendarDate::-webkit-calendar-picker-indicator {
     filter: invert(1);
 }
+
+/* Login Page Specific Styles */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: var(--bg-secondary);
+}
+
+.login-box {
+    background: var(--bg-primary);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+.login-box h2 {
+    margin-bottom: 30px;
+    color: var(--text-main);
+    font-size: 1.8rem;
+}
+
+.login-box input[type="text"],
+.login-box input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.show-password {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+#loginBtn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+#loginBtn:hover {
+    opacity: 0.85;
+}
+
+#loginMsg {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    min-height: 1.2rem;
+}
+
+.error-msg { color: #bd3d3d; }
+.success-msg { color: #4caf50; }

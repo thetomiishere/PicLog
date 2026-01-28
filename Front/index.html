@@ -16,19 +16,34 @@
         <aside class="sidebar">
             <h2>menu</h2>
             <nav>
-                <div id="sidebarMenu">
-                    <div>
-                        <a href="#/calendar" data-section="calendar" id="calendarBtn">Calendar</a>
+                <div class="top-actions">
+                    <div id="sidebarMenu">
+                        <!--
+                        <div>
+                            <a href="#/calendar" data-section="calendar" id="calendarBtn">Calendar</a>
+                        </div>
+                        <div>
+                            <a href="#/frequency" data-section="frequency" id="frequencyBtn">Frequency</a>
+                        </div>
+                        -->                        
                     </div>
-                    <div>
-                        <a href="#/frequency" data-section="frequency" id="frequencyBtn">Frequency</a>
-                    </div>
-                    <hr>
-                    <div class="add-calendar-container">
+                </div>
+        
+                <div class="bottom-actions">
+                    <div class="add-container">
                         <button id="addCalendarBtn" class="btn-style">+ New Calendar</button>
                     </div>
-                    <div class="add-calendar-container">
-                        <button id="addFreqBtn" class="btn-style">+ New Frequency Calendar</button>
+                    <div class="add-container">
+                        <button id="addFreqBtn" class="btn-style">+ New Frequency</button>
+                    </div>
+                    <div id="adminOnlyTools" style="display: none;" class="add-container">
+                        <button id="addUserBtn" class="btn-style">＋ Create New User</button>
+                    </div>
+                    <div class="logout-container">
+                        <div class="user-footer">
+                            <span id="displayUsername" class="user-name"></span>
+                            <a href="#" id="logoutBtn" class="logout-link">登出 (Logout)</a>
+                        </div>
                     </div>
                 </div>
             </nav>
