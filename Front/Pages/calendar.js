@@ -1,5 +1,5 @@
 import { addwDate, editTableName } from '../Modals/calendarModal.js';
-import { populateOptions, updateDate } from './trivia.js';
+import { populateOptions, updateDate, setPageDisabled } from './trivia.js';
 import { calendarService, deleteCell, updateTableName } from '../Services/calendarService.js';
 
 const session = JSON.parse(localStorage.getItem("currentUser"));
@@ -77,7 +77,14 @@ export async function calendar(calendarID) {
         const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         const result = await addwDate(currentTable, today, session.username);
         if (result.success) {
-            await renderCalendar(dateState.year, dateState.month);
+            try {
+                setPageDisabled(true);
+                await renderCalendar(dateState.year, dateState.month);
+            } catch (err) {
+                console.log(err);
+            } finally {
+                setPageDisabled(false); 
+            }
         }
     };
 
@@ -125,14 +132,28 @@ export async function renderCalendar(year, month) {
                 if (confirmOverwrite) {
                     const result = await deleteCell(currentTable, dateString);
                     if (result.success) {
-                        await renderCalendar(dateState.year, dateState.month);
+                        try {
+                            setPageDisabled(true);
+                            await renderCalendar(dateState.year, dateState.month);
+                        } catch (err) {
+                            console.log(err);
+                        } finally {
+                            setPageDisabled(false); 
+                        }
                     }
                     return;
                 }
             } else {
                 const result = await addwDate(currentTable, dateString, session.username);
                 if (result.success) {
-                    await renderCalendar(dateState.year, dateState.month);
+                    try {
+                        setPageDisabled(true);
+                        await renderCalendar(dateState.year, dateState.month);
+                    } catch (err) {
+                        console.log(err);
+                    } finally {
+                        setPageDisabled(false); 
+                    }
                 }
             }
         };
