@@ -1,0 +1,20 @@
+{
+  "name": "PicLog Calendar",
+  "short_name": "PicLog",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#969696",
+  "icons": [
+    {
+      "src": "https://emojicdn.elk.sh/🗓️?size=192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://emojicdn.elk.sh/🗓️?size=512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
