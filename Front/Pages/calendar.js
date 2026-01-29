@@ -1,6 +1,6 @@
-import { addwDate } from '../Modals/calendarModal.js';
+import { addwDate, editTableName } from '../Modals/calendarModal.js';
 import { populateOptions, updateDate } from './trivia.js';
-import { calendarService, deleteCell } from '../Services/calendarService.js';
+import { calendarService, deleteCell, updateTableName } from '../Services/calendarService.js';
 
 const session = JSON.parse(localStorage.getItem("currentUser"));
 let currentTable = "";
@@ -16,6 +16,23 @@ export async function calendar(calendarID) {
     // if (calendarTitle) {
     //     calendarTitle.innerHTML = currentTable.toUpperCase();
     // }
+    const titleDisplay = document.getElementById('currentPageTitle');
+    if (titleDisplay) {
+        titleDisplay.style.cursor = 'pointer';
+        
+        titleDisplay.onclick = async () => {
+            const currentName = titleDisplay.textContent;
+            const newName = await editTableName(currentName);
+            
+            if (newName && newName !== currentName) {
+                const res = await updateTableName('calendars', calendarID, newName, session.username);
+                if (res.success) {
+                    alert("Name updated!");
+                    location.reload();
+                }
+            }
+        };
+    }
 
     const monthLabel = document.getElementById('monthLabel'); 
     const yearLabel = document.getElementById('yearLabel');

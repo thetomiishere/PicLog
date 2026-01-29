@@ -199,11 +199,11 @@ function handleHashChange() {
     const hash = window.location.hash;
     if (!hash || hash === "#") return;
     const titleDisplay = document.getElementById('currentPageTitle');
-    const targetId = hash.split('/').pop();
+    const targetId = decodeURIComponent(hash.split('/').pop());
     const cleanTitle = targetId.replace(/_/g, ' ').toUpperCase();
-    
+    const activeNavLink = document.querySelector(`.nav-link[data-id="${targetId}"]`);
     if (titleDisplay) {
-        titleDisplay.textContent = cleanTitle;
+        titleDisplay.textContent = activeNavLink ? activeNavLink.textContent : cleanTitle;
     }
 
     if (session.role !== 'admin' && !session.allowedTables.includes(targetId)) {
@@ -265,22 +265,22 @@ async function updateSidebar() {
     // const allFreqs = await getAllFrequencies();
 
     const calendars = session.role === 'admin' ? allCals : allCals.filter(id => session.allowedTables.includes(id));
-    const frequencies = session.role === 'admin' ? allFreqs : allFreqs.filter(id => session.allowedTables.includes(id));
+    const frequencies = session.role === 'admin' ? allFreqs : allFreqs.filter(item => session.allowedTables.includes(item.id));
 
     if (calendars.length === 0 && frequencies.length === 0) {
         sidebarMenu.innerHTML = '<p style="padding:10px; font-size:0.8rem; opacity:0.5;">No tables available</p>';
         return;
     }
 
-    frequencies.forEach(id => {
-        const div = document.createElement('div');
-        div.innerHTML = `<a href="#/frequency/${id}" data-section="frequency" data-id="${id}" class="nav-link">${id.toUpperCase()}</a>`;
-        sidebarMenu.appendChild(div);
-    });
-
     calendars.forEach(id => {
         const div = document.createElement('div');
         div.innerHTML = `<a href="#/calendar/${id}" data-section="calendar" data-id="${id}" class="nav-link">${id.toUpperCase()}</a>`;
+        sidebarMenu.appendChild(div);
+    });
+
+    frequencies.forEach(item => {
+        const div = document.createElement('div');
+        div.innerHTML = `<a href="#/frequency/${item.id}" data-section="frequency" data-id="${item.id}" class="nav-link">${item.name}</a>`;
         sidebarMenu.appendChild(div);
     });
 }

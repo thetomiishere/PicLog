@@ -1,6 +1,6 @@
 import { db } from '../Configs/firebaseConfig.js';
 import { doc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { setDoc, getDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { setDoc, getDoc, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export async function calendarService(calendarID, month, year) {
     // const response = {
@@ -62,5 +62,19 @@ export async function hasPhoto(calendarID, dateString) {
     } catch (err) {
         console.error("Error checking existence:", err);
         return false;
+    }
+}
+
+export async function updateTableName(calendarID, id, newName, username) {
+    try {
+        const docRef = doc(db, calendarID, id);
+        await updateDoc(docRef, {
+            name: newName,
+            updatedBy: username
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating table name:", error);
+        return { success: false };
     }
 }

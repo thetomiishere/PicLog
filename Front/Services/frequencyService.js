@@ -1,6 +1,6 @@
 import { db } from '../Configs/firebaseConfig.js';
 import { doc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { setDoc, getDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { setDoc, getDoc, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export async function frequencyService(tableID, year, month) {
     const monthStr = `${year}-${String(month).padStart(2, '0')}`;
@@ -57,6 +57,20 @@ export async function deleteFreq(tableID, dateString) {
         return { success: true };
     } catch (err) {
         console.error("Delete Error:", err);
+        return { success: false };
+    }
+}
+
+export async function updateTableName(tableID, id, newName, username) {
+    try {
+        const docRef = doc(db, tableID, id);
+        await updateDoc(docRef, {
+            name: newName,
+            updatedBy: username
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating table name:", error);
         return { success: false };
     }
 }

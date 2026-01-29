@@ -42,3 +42,29 @@ export function addwDate(freqID, dateStr, username) {
         };
     });
 }
+
+export function editTableName(currentName) {
+    const modal = document.getElementById('createModal');
+    const nameInput = document.getElementById('newInputName');
+    const colorContainer = document.getElementById('colorPickerContainer');
+    document.getElementById('createModalTitle').textContent = "編輯表格名稱";
+    colorContainer.style.display = "none";
+    
+    modal.style.display = "flex";
+    nameInput.value = currentName;
+    nameInput.focus();
+
+    return new Promise((resolve) => {
+        document.getElementById('confirmCreateBtn').onclick = () => {
+            const name = nameInput.value.trim();
+            if (name) {
+                modal.style.display = "none";
+                resolve(name);
+            }
+        };
+        document.getElementById('cancelCreateBtn').onclick = () => {
+            modal.style.display = "none";
+            resolve(null);
+        };
+    });
+}

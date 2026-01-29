@@ -15,7 +15,7 @@ export async function getAllCalendars() {
 export async function getAllFrequencies() {
     try {
         const response = await getDocs(collection(db, "frequencies"));
-        return response.docs.map(doc => doc.id);
+        return response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (err) {
         console.error("Error fetching calendars:", err);
         return [];
