@@ -16,7 +16,7 @@ if (!session) {
 
 import { calendar } from './Pages/calendar.js';
 import { frequency } from './Pages/frequency.js';
-import { getAllCalendars, getAllFrequencies, newTable, newUser, deleteTable } from './mainService.js';
+import { getAllCalendars, getAllFrequencies, onTable, newUser, deleteTable } from './mainService.js';
 
 let currentCalendarID = "";
 let currentFreqID  = "";
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const username = prompt("Username:").toLowerCase().trim();
                 const password = prompt("Password:");
                 if (username && password) {
-                    const res = await newUser(username, password);
+                    const res = await newUser(username, password, session.username);
                     if (res.success) alert("User Created!");
                 }
             };
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!nameData) return;
         const id = nameData.name.toLowerCase().replace(/\s+/g, '_');
         
-        const res = await newTable('calendars', id, { name: nameData.name }, session.username);
+        const res = await onTable('calendars', id, { name: nameData.name }, session.username);
         if (res.success) {
             if (session.role !== 'admin') {
                 session.allowedTables.push(id);
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!resModal) return;
         const id = resModal.name.toLowerCase().replace(/\s+/g, '_');
         
-        const res = await newTable('frequencies', id, { name: resModal.name, color: resModal.color }, session.username);
+        const res = await onTable('frequencies', id, { name: resModal.name, color: resModal.color }, session.username);
         if (res.success) {
             if (session.role !== 'admin') {
                 session.allowedTables.push(id);
@@ -152,6 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 alert("Deleted successfully.");
                 await updateSidebar();
                 window.location.hash = '';
+                window.location.reload();
             }
         }
     };
@@ -168,6 +169,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 alert("Deleted successfully.");
                 await updateSidebar();
                 window.location.hash = '';
+                window.location.reload();
             }
         }
     };

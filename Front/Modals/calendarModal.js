@@ -1,6 +1,6 @@
 import { addCell, hasPhoto } from '../Services/calendarService.js';
 
-export function addwDate(calendarID, dateString) {
+export function addwDate(calendarID, dateString, username) {
     const modal = document.getElementById('uploadModal');
     const logDateInput = document.getElementById('logDate');
     const saveBtn = document.getElementById('saveBtn');
@@ -27,7 +27,7 @@ export function addwDate(calendarID, dateString) {
             }
 
             const compressedBase64 = await compressImage(file);
-            const result = await addCell(calendarID, selectedDate, compressedBase64);
+            const result = await addCell(calendarID, selectedDate, compressedBase64, username);
 
             if (result.success) {
                 resetInput();

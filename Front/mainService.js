@@ -22,18 +22,20 @@ export async function getAllFrequencies() {
     }
 }
 
-export async function newTable(collectionName, id, data, username) {
+export async function onTable(collectionName, id, data, username) {
     try {
         await setDoc(doc(db, collectionName, id), {
             ...data,
             createdBy: username,
+            updatedBy: username,
             createdAt: new Date().toISOString()
         });
 
         if (username && username !== 'admin') {
             const userRef = doc(db, 'users', username);
             await updateDoc(userRef, {
-                allowedTables: arrayUnion(id)
+                allowedTables: arrayUnion(id),
+                username: username
             });
         }
 
@@ -52,7 +54,8 @@ export async function deleteTable(collectionName, id, username) {
         if (username && username !== 'admin') {
             const userRef = doc(db, 'users', username);
             await updateDoc(userRef, {
-                allowedTables: arrayRemove(id)
+                allowedTables: arrayRemove(id),
+                username: username
             });
         }
         return { success: true };
@@ -62,13 +65,15 @@ export async function deleteTable(collectionName, id, username) {
     }
 }
 
-export async function newUser(username, password, role = 'user') {
+export async function newUser(username, password, adminUsername, role = 'user') {
     try {
         const userRef = doc(db, 'users', username.toLowerCase());
         await setDoc(userRef, {
+            username: username.toLowerCase(),
             password: password,
             role: role,
-            allowedTables: []
+            allowedTables: [],
+            adminAuthor: adminUsername
         });
         return { success: true };
     } catch (error) {

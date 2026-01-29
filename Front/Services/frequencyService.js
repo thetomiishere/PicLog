@@ -35,13 +35,14 @@ export async function getTableMetadata(id) {
     }
 }
 
-export async function addFreq(tableID, dateString, count) {
+export async function addFreq(tableID, dateString, count, username) {
     try {
         const cellRef = doc(db, 'frequencies', tableID, 'entries', dateString);
         await setDoc(cellRef, {
             date: dateString, 
             count: Number(count),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            updatedBy: username
         });        
         return { success: true };
     } catch (err) {

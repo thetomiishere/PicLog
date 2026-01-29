@@ -2,8 +2,8 @@ import { addwDate } from '../Modals/frequencyModal.js';
 import { populateOptions, updateDate } from './trivia.js';
 import { frequencyService, getTableMetadata, deleteFreq } from '../Services/frequencyService.js';
 
+const session = JSON.parse(localStorage.getItem("currentUser"));
 let currentTable = "";
-
 let currentDisplayDate = new Date();
 let dateState = {
     year: currentDisplayDate.getFullYear(),
@@ -58,7 +58,7 @@ export async function frequency(freqID) {
     openBtn.onclick = async () => {
         const now = new Date();
         const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const result = await addwDate(currentTable, today);
+        const result = await addwDate(currentTable, today, session.username);
         if (result.success) {
             await renderFreq(dateState.year, dateState.month);
         }
@@ -129,7 +129,7 @@ export async function renderFreq(year, month) {
                     }
                 }
             } else {
-                const result = await addwDate(currentTable, dateString);
+                const result = await addwDate(currentTable, dateString, session.username);
                 if (result.success) {
                     await renderFreq(dateState.year, dateState.month);
                 }

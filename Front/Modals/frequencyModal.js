@@ -1,6 +1,6 @@
 import { addFreq } from '../Services/frequencyService.js';
 
-export function addwDate(freqID, dateStr) {
+export function addwDate(freqID, dateStr, username) {
     const modal = document.getElementById('frequencyModal');
     const dateInput = document.getElementById('freqLogDate');
     const numInput = document.getElementById('freqNumber');
@@ -27,7 +27,7 @@ export function addwDate(freqID, dateStr) {
                 return;
             }
 
-            const result = await addFreq(freqID, dateStr, val);
+            const result = await addFreq(freqID, dateStr, val, username);
             if (result.success) {
                 cleanup();
                 resolve({ success: true });

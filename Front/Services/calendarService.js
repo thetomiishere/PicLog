@@ -25,14 +25,15 @@ export async function calendarService(calendarID, month, year) {
     }
 }
 
-export async function addCell (calendarID, dateString, file) {
+export async function addCell (calendarID, dateString, file, username) {
     try {
         const cellRef = doc(db, 'calendars', calendarID, 'entries', dateString);
         
         await setDoc(cellRef, {
             date: dateString, 
             imageUrl: file,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            updatedBy: username
         });
         
         return { success: true };
