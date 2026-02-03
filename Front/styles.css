@@ -422,10 +422,15 @@ body.dark-mode .sidebar nav a.active {
     border: 1px solid var(--border);
     border-radius: 8px;
     position: relative;
-    background-size: 100% auto;
+    background-size: contain; 
     background-repeat: no-repeat;
     background-position: center;
     background-color: var(--cell-bg);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease; /* Smooth color swap */
 }
 
 .day-cell.empty-cell {
@@ -442,6 +447,8 @@ body.dark-mode .sidebar nav a.active {
     font-size: 12px; 
     font-weight: bold; 
     z-index: 2; 
+    text-shadow: 0 0 4px rgba(0,0,0,0.5); /* Helps visibility on bright photos */
+    color: white;
 }
 
 .intensity-overlay {

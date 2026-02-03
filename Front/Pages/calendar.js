@@ -177,15 +177,34 @@ export async function renderCalendar(year, month) {
 export function populateCell(dateString, imageUrl) {    
     const targetCell = document.getElementById(`cell-${dateString}`);
 
-    if (targetCell) {
+    if (targetCell && imageUrl) {
         targetCell.style.backgroundImage = `url(${imageUrl})`;
         targetCell.setAttribute('data-has-photo', 'true');
-    } else {
+        
+        if (document.body.classList.contains('dark-mode')) {
+            targetCell.style.backgroundColor = '#000000';
+        } else {
+            targetCell.style.backgroundColor = '#ffffff';
+        }
+    } else if (targetCell) {
         targetCell.style.backgroundImage = 'none';
+        targetCell.style.backgroundColor = '';
         targetCell.removeAttribute('data-has-photo');
-        console.error(`Error: Could not find cell with ID cell-${dateString}`);
     }
 }
+
+// export function populateCell(dateString, imageUrl) {    
+//     const targetCell = document.getElementById(`cell-${dateString}`);
+
+//     if (targetCell) {
+//         targetCell.style.backgroundImage = `url(${imageUrl})`;
+//         targetCell.setAttribute('data-has-photo', 'true');
+//     } else {
+//         targetCell.style.backgroundImage = 'none';
+//         targetCell.removeAttribute('data-has-photo');
+//         console.error(`Error: Could not find cell with ID cell-${dateString}`);
+//     }
+// }
 
 const handleRefresh = async () => {
     await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);
