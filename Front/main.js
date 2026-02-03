@@ -1,4 +1,4 @@
-// import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { ui } from './Pages/dictionary.js';
 const session = JSON.parse(localStorage.getItem("currentUser"));
 const EXPIRATION_TIME = 24 * 60 * 60 * 1000;
 if (!session) {
@@ -6,18 +6,17 @@ if (!session) {
 } else {
     const now = new Date().getTime();
     if (now - session.loginTime > EXPIRATION_TIME) {
-        alert("Session expired. Please login again.");
+        alert(ui.session_expired);
         localStorage.removeItem("currentUser");
         window.location.href = "login.html";
     } else {
-        console.log(`Welcome back, ${session.username}`);
+        console.log(`${ui.welcome}, ${session.username}`);
     }
 }
 
 import { calendar } from './Pages/calendar.js';
 import { frequency } from './Pages/frequency.js';
 import { getAllCalendars, getAllFrequencies, onTable, newUser, deleteTable } from './mainService.js';
-
 let currentCalendarID = "";
 let currentFreqID  = "";
 
@@ -69,18 +68,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('addFreqBtn').style.display = 'block';
     document.getElementById('deleteCalendarBtn').style.display = 'block';
     document.getElementById('deleteFreqBtn').style.display = 'block';
+
+    document.getElementById('addCalendarBtn').innerText = ui.add_calendar;
+    document.getElementById('addFreqBtn').innerText = ui.add_freq;
     // add user
     if (session.role === 'admin') {
         if (adminTools) adminTools.style.display = 'block';
         if (addUserBtn) {
-            addUserBtn.style.display = 'block';
             addUserBtn.onclick = async () => {
                 closeSidebar();
-                const username = prompt("Username:").toLowerCase().trim();
-                const password = prompt("Password:");
+                const username = prompt(ui.new_user_prompt).toLowerCase().trim();
+                const password = prompt(ui.new_pwd_prompt);
                 if (username && password) {
                     const res = await newUser(username, password, session.username);
-                    if (res.success) alert("User Created!");
+                    if (res.success) alert(ui.user_created);
                 }
             };
         }
@@ -108,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // add calendar
     document.getElementById('addCalendarBtn').onclick = async () => {
         closeSidebar();
-        const nameData = await getNameFromModal("新增照片 Calendar");
+        const nameData = await getNameFromModal("New Photo Calendar");
         if (!nameData) return;
         const id = nameData.name.toLowerCase().replace(/\s+/g, '_');
         
@@ -122,10 +123,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.hash = `#/calendar/${id}`;
         }
     };
+    // document.getElementById('addCalendarBtn').onclick = async () => {
+    //     closeSidebar();
+    //     const nameData = await getNameFromModal("新增照片 Calendar");
+    //     if (!nameData) return;
+    //     const id = nameData.name.toLowerCase().replace(/\s+/g, '_');
+        
+    //     const res = await onTable('calendars', id, { name: nameData.name }, session.username);
+    //     if (res.success) {
+    //         if (session.role !== 'admin') {
+    //             session.allowedTables.push(id);
+    //             localStorage.setItem("currentUser", JSON.stringify(session));
+    //         }
+    //         await updateSidebar();
+    //         window.location.hash = `#/calendar/${id}`;
+    //     }
+    // };
     // add frequency
     document.getElementById('addFreqBtn').onclick = async () => {
         closeSidebar();
-        const resModal = await getNameFromModal("新增頻率 Tracker", true);
+        const resModal = await getNameFromModal("New Tracker", true);
         if (!resModal) return;
         const id = resModal.name.toLowerCase().replace(/\s+/g, '_');
         
@@ -139,41 +156,62 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.hash = `#/frequency/${id}`;
         }
     };
+    // document.getElementById('addFreqBtn').onclick = async () => {
+    //     closeSidebar();
+    //     const resModal = await getNameFromModal("新增頻率 Tracker", true);
+    //     if (!resModal) return;
+    //     const id = resModal.name.toLowerCase().replace(/\s+/g, '_');
+        
+    //     const res = await onTable('frequencies', id, { name: resModal.name, color: resModal.color }, session.username);
+    //     if (res.success) {
+    //         if (session.role !== 'admin') {
+    //             session.allowedTables.push(id);
+    //             localStorage.setItem("currentUser", JSON.stringify(session));
+    //         }
+    //         await updateSidebar();
+    //         window.location.hash = `#/frequency/${id}`;
+    //     }
+    // };
     // delete calendar
     document.getElementById('deleteCalendarBtn').onclick = async () => {
         if (!currentCalendarID) return;
-        if (confirm(`Sure you wanna delete "${currentCalendarID.toUpperCase()}"?`)) {
+        if (confirm(`${ui.sure_delete_table} "${currentCalendarID.toUpperCase()}"?`)) {
             const res = await deleteTable('calendars', currentCalendarID, session.username);
             if (res.success) {
                 if (session.role !== 'admin') {
                     session.allowedTables = session.allowedTables.filter(t => t !== currentCalendarID);
                     localStorage.setItem("currentUser", JSON.stringify(session));
                 }
-                alert("Deleted successfully.");
+                alert(ui.deleted_success);
                 await updateSidebar();
                 window.location.hash = '';
                 window.location.reload();
+            } else {
+                alert(ui.deleted_failed);alert(ui.deleted_success);
             }
         }
     };
     // delete freq
     document.getElementById('deleteFreqBtn').onclick = async () => {
         if (!currentFreqID) return;
-        if (confirm(`Sure you wanna delete "${currentFreqID.toUpperCase()}"?`)) {
+        if (confirm(`${ui.sure_delete_table} "${currentCalendarID.toUpperCase()}"?`)) {
             const res = await deleteTable('frequencies', currentFreqID, session.username);
             if (res.success) {
                 if (session.role !== 'admin') {
                     session.allowedTables = session.allowedTables.filter(t => t !== currentFreqID);
                     localStorage.setItem("currentUser", JSON.stringify(session));
                 }
-                alert("Deleted successfully.");
+                alert(ui.deleted_success);
                 await updateSidebar();
                 window.location.hash = '';
                 window.location.reload();
+            } else {
+                alert(ui.deleted_failed);alert(ui.deleted_success);
             }
         }
     };
     // logout
+    document.getElementById('logoutBtn').innerText = ui.logout;
     document.getElementById('logoutBtn').onclick = (e) => {
         e.preventDefault();
         handleLogout();
@@ -207,7 +245,7 @@ function handleHashChange() {
     }
 
     if (session.role !== 'admin' && !session.allowedTables.includes(targetId)) {
-        alert("No permission.");
+        alert(ui.no_permission);
         window.location.hash = "";
         return;
     }
@@ -241,17 +279,6 @@ function showSection(section) {
     */
 }
 
-function hideAllSections() {
-    const sections = ['calendar', 'frequency'];
-    sections.forEach(id => {
-        const element = document.getElementById(`${id}Section`);
-        if (element) element.style.display = 'none';
-    });
-    document.querySelectorAll('.nav-link, [data-section]').forEach(link => {
-        link.classList.remove('active');
-    });
-}
-
 async function updateSidebar() {
     const sidebarMenu = document.getElementById('sidebarMenu');
     if (!sidebarMenu || !session) return;
@@ -268,7 +295,7 @@ async function updateSidebar() {
     const frequencies = session.role === 'admin' ? allFreqs : allFreqs.filter(item => session.allowedTables.includes(item.id));
 
     if (calendars.length === 0 && frequencies.length === 0) {
-        sidebarMenu.innerHTML = '<p style="padding:10px; font-size:0.8rem; opacity:0.5;">No tables available</p>';
+        sidebarMenu.innerHTML = `<p style="padding:10px; font-size:0.8rem; opacity:0.5;">${ui.no_tables}</p>`;
         return;
     }
 

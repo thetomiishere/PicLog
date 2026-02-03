@@ -1,3 +1,4 @@
+import { ui } from './dictionary.js';
 import { addwDate, editTableName } from '../Modals/calendarModal.js';
 import { populateOptions, updateDate, setPageDisabled } from './trivia.js';
 import { calendarService, deleteCell, updateTableName } from '../Services/calendarService.js';
@@ -12,10 +13,7 @@ let dateState = {
 
 export async function calendar(calendarID) {
     currentTable = calendarID;
-    // const calendarTitle = document.getElementById('calendarTitle');
-    // if (calendarTitle) {
-    //     calendarTitle.innerHTML = currentTable.toUpperCase();
-    // }
+    
     const titleDisplay = document.getElementById('currentPageTitle');
     if (titleDisplay) {
         titleDisplay.style.cursor = 'pointer';
@@ -27,7 +25,7 @@ export async function calendar(calendarID) {
             if (newName && newName !== currentName) {
                 const res = await updateTableName('calendars', calendarID, newName, session.username);
                 if (res.success) {
-                    alert("Name updated!");
+                    alert(ui.name_updated);
                     location.reload();
                 }
             }
@@ -94,12 +92,10 @@ export async function calendar(calendarID) {
 }
 
 export async function renderCalendar(year, month) {
-    const calendarElement = document.getElementById('calendar');
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    
+    const calendarElement = document.getElementById('calendar');    
     calendarElement.innerHTML = '';
     
-    dayNames.forEach(name => {
+    ui.weekdays.forEach(name => {
         const div = document.createElement('div');
         div.className = 'day-name';
         div.innerText = name;
@@ -128,7 +124,7 @@ export async function renderCalendar(year, month) {
         cell.onclick = async () => {
             const hasPhoto = cell.getAttribute('data-has-photo') === 'true';
             if (hasPhoto) {
-                const confirmOverwrite = confirm("Do you wanna delete and replace it?");
+                const confirmOverwrite = confirm(ui.confirm_delete);
                 if (confirmOverwrite) {
                     const result = await deleteCell(currentTable, dateString);
                     if (result.success) {
@@ -180,6 +176,9 @@ export function populateCell(dateString, imageUrl) {
     if (targetCell && imageUrl) {
         targetCell.style.backgroundImage = `url(${imageUrl})`;
         targetCell.setAttribute('data-has-photo', 'true');
+
+        const dateSpan = targetCell.querySelector('span');
+        if (dateSpan) dateSpan.style.display = 'none';
         
         if (document.body.classList.contains('dark-mode')) {
             targetCell.style.backgroundColor = '#000000';
@@ -192,19 +191,6 @@ export function populateCell(dateString, imageUrl) {
         targetCell.removeAttribute('data-has-photo');
     }
 }
-
-// export function populateCell(dateString, imageUrl) {    
-//     const targetCell = document.getElementById(`cell-${dateString}`);
-
-//     if (targetCell) {
-//         targetCell.style.backgroundImage = `url(${imageUrl})`;
-//         targetCell.setAttribute('data-has-photo', 'true');
-//     } else {
-//         targetCell.style.backgroundImage = 'none';
-//         targetCell.removeAttribute('data-has-photo');
-//         console.error(`Error: Could not find cell with ID cell-${dateString}`);
-//     }
-// }
 
 const handleRefresh = async () => {
     await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);

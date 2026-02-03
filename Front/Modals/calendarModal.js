@@ -1,9 +1,16 @@
+import { ui } from '../Pages/dictionary.js';
 import { addCell, hasPhoto } from '../Services/calendarService.js';
 
 export function addwDate(calendarID, dateString, username) {
     const modal = document.getElementById('uploadModal');
     const logDateInput = document.getElementById('logDate');
     const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('closeModal');
+    const modalTitle = modal.querySelector('h3');
+
+    if (modalTitle) modalTitle.textContent = ui.upload_photo_title;
+    saveBtn.textContent = ui.save_btn;
+    cancelBtn.textContent = ui.cancel_btn;
     
     logDateInput.value = dateString;
     modal.style.display = "flex";
@@ -11,15 +18,16 @@ export function addwDate(calendarID, dateString, username) {
     return new Promise((resolve) => {
         saveBtn.onclick = async () => {
             const selectedDate = logDateInput.value;
+            const photoInput = document.getElementById('photoInput');
             const file = photoInput.files[0];
             if (!file) {
-                alert("Please select a photo!");
+                alert(ui.select_photo_alert);
                 return;
             }
 
             const isOccupied = await hasPhoto(calendarID, selectedDate);
             if (isOccupied) {
-                alert(`${selectedDate} 已經有照片囉！`);
+                alert(`${selectedDate} ${ui.already_has_photo}`);
                 resetInput();
                 modal.style.display = "none";
                 resolve({ success: false, reason: 'occupied' });
@@ -32,11 +40,14 @@ export function addwDate(calendarID, dateString, username) {
             if (result.success) {
                 resetInput();
                 modal.style.display = "none";
+                alert(ui.added_success);
                 resolve(result);
+            } else {
+                alert(ui.added_failed);
             }
         };
 
-        document.getElementById('closeModal').onclick = () => {
+        cancelBtn.onclick = () => {
             resetInput();
             modal.style.display = "none";
             resolve({ success: false });
@@ -48,7 +59,13 @@ export function editTableName(currentName) {
     const modal = document.getElementById('createModal');
     const nameInput = document.getElementById('newInputName');
     const colorContainer = document.getElementById('colorPickerContainer');
-    document.getElementById('createModalTitle').textContent = "編輯表格名稱";
+    const saveBtn = document.getElementById('confirmCreateBtn');
+    const cancelBtn = document.getElementById('cancelCreateBtn');
+
+    document.getElementById('createModalTitle').textContent = ui.edit_name_title;
+    saveBtn.textContent = ui.save_btn;
+    cancelBtn.textContent = ui.cancel_btn;
+
     colorContainer.style.display = "none";
     
     modal.style.display = "flex";
@@ -56,14 +73,14 @@ export function editTableName(currentName) {
     nameInput.focus();
 
     return new Promise((resolve) => {
-        document.getElementById('confirmCreateBtn').onclick = () => {
+        saveBtn.onclick = () => {
             const name = nameInput.value.trim();
             if (name) {
                 modal.style.display = "none";
                 resolve(name);
             }
         };
-        document.getElementById('cancelCreateBtn').onclick = () => {
+        cancelBtn.onclick = () => {
             modal.style.display = "none";
             resolve(null);
         };

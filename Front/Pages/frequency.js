@@ -1,3 +1,4 @@
+import { ui } from './dictionary.js';
 import { addwDate, editTableName } from '../Modals/frequencyModal.js';
 import { populateOptions, updateDate, setPageDisabled } from './trivia.js';
 import { frequencyService, getTableMetadata, deleteFreq, updateTableName } from '../Services/frequencyService.js';
@@ -12,10 +13,6 @@ let dateState = {
 
 export async function frequency(freqID) {
     currentTable = freqID;
-    // const freqTitle = document.getElementById('freqTitle');
-    // if (freqTitle) {
-    //     freqTitle.innerHTML = currentTable.toUpperCase();
-    // }
     const titleDisplay = document.getElementById('currentPageTitle');
     if (titleDisplay) {
         titleDisplay.style.cursor = 'pointer';
@@ -27,7 +24,7 @@ export async function frequency(freqID) {
             if (newName && newName !== currentName) {
                 const res = await updateTableName('frequencies', freqID, newName, session.username);
                 if (res.success) {
-                    alert("Name updated!");
+                    alert(ui.name_updated);
                     location.reload();
                 }
             }
@@ -95,10 +92,13 @@ export async function frequency(freqID) {
 export async function renderFreq(year, month) {
     const grid = document.getElementById('frequencyGrid');
     if (!grid) return;
-
-    const dayNames = grid.querySelectorAll('.day-name');
     grid.innerHTML = '';
-    dayNames.forEach(day => grid.appendChild(day));
+    ui.weekdays.forEach(name => {
+        const div = document.createElement('div');
+        div.className = 'day-name';
+        div.innerText = name;
+        grid.appendChild(div);
+    });
 
     const response = await frequencyService(currentTable, year, month + 1);
     const data = response.data || {};
@@ -145,7 +145,7 @@ export async function renderFreq(year, month) {
         cell.onclick = async () => {
             const hasData = cell.getAttribute('data-has-data') === 'true';
             if (hasData) {
-                const confirmOverwrite = confirm("Do you wanna delete and replace it?");
+                const confirmOverwrite = confirm(ui.confirm_delete);
                 if (confirmOverwrite) {
                     const result = await deleteFreq(currentTable, dateString);
                     if (result.success) {
@@ -222,6 +222,8 @@ function applyIntensityStyle(cell, scale, hexColor) {
 }
 
 const handleRefresh = async () => {
+    const monthLabel = document.getElementById('monthLabelFreq'); 
+    const yearLabel = document.getElementById('yearLabelFreq');
     await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);
     await renderCalendar(dateState.year, dateState.month);
     populateOptions('monthOptions', 0, 11, true, dateState, currentDisplayDate, handleRefresh);

@@ -1,3 +1,4 @@
+import { ui } from '../Pages/dictionary.js';
 import { addFreq } from '../Services/frequencyService.js';
 
 export function addwDate(freqID, dateStr, username) {
@@ -6,6 +7,14 @@ export function addwDate(freqID, dateStr, username) {
     const numInput = document.getElementById('freqNumber');
     const saveBtn = document.getElementById('saveFreqBtn');
     const closeBtn = document.getElementById('closeFreqModal');
+    const modalTitle = modal.querySelector('h3');
+    const valueLabel = modal.querySelector('label[for="freqNumber"]');
+    
+    if (modalTitle) modalTitle.textContent = ui.log_entry_title;
+    if (valueLabel) valueLabel.textContent = ui.value_label;
+    numInput.placeholder = ui.enter_number_placeholder;
+    saveBtn.textContent = ui.save_btn;
+    closeBtn.textContent = ui.cancel_btn;
 
     dateInput.value = dateStr;
     numInput.value = ""; 
@@ -23,16 +32,17 @@ export function addwDate(freqID, dateStr, username) {
             const val = numInput.value.trim();
             
             if (val === "") {
-                alert("Please enter a value");
+                alert(ui.value_label.replace(':', '') + " ?");
                 return;
             }
 
             const result = await addFreq(freqID, dateStr, val, username);
             if (result.success) {
                 cleanup();
+                alert(ui.added_success);
                 resolve({ success: true });
             } else {
-                alert("Failed to save. Check console for details.");
+                alert(ui.added_failed);
             }
         };
 
@@ -47,7 +57,12 @@ export function editTableName(currentName) {
     const modal = document.getElementById('createModal');
     const nameInput = document.getElementById('newInputName');
     const colorContainer = document.getElementById('colorPickerContainer');
-    document.getElementById('createModalTitle').textContent = "編輯表格名稱";
+    const confirmBtn = document.getElementById('confirmCreateBtn');
+    const cancelBtn = document.getElementById('cancelCreateBtn');
+
+    document.getElementById('createModalTitle').textContent = ui.edit_name_title;
+    confirmBtn.textContent = ui.save_btn;
+    cancelBtn.textContent = ui.cancel_btn;
     colorContainer.style.display = "none";
     
     modal.style.display = "flex";
@@ -55,14 +70,14 @@ export function editTableName(currentName) {
     nameInput.focus();
 
     return new Promise((resolve) => {
-        document.getElementById('confirmCreateBtn').onclick = () => {
+        confirmBtn.onclick = () => {
             const name = nameInput.value.trim();
             if (name) {
                 modal.style.display = "none";
                 resolve(name);
             }
         };
-        document.getElementById('cancelCreateBtn').onclick = () => {
+        cancelBtn.onclick = () => {
             modal.style.display = "none";
             resolve(null);
         };

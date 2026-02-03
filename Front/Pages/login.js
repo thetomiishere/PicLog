@@ -1,15 +1,21 @@
 import { db } from '../Configs/firebaseConfig.js';
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+import { ui } from './dictionary.js';
 
 if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-mode');
 }
 
 const loginBtn = document.getElementById('loginBtn');
-const pwdInput = document.getElementById('pwd');
 const accInput = document.getElementById('acc');
+const pwdInput = document.getElementById('pwd');
 const showPwdCheckbox = document.getElementById('showPwd');
+
+document.getElementById('loginTitle').innerText = ui.login_title;
+loginBtn.innerText = ui.login_btn;
+accInput.placeholder = ui.account;
+pwdInput.placeholder = ui.password;
+showPwdCheckbox.innerText = ui.show_password;
 
 showPwdCheckbox.onchange = () => {
     pwdInput.type = showPwdCheckbox.checked ? 'text' : 'password';
@@ -48,10 +54,10 @@ loginBtn.onclick = async () => {
 
                 window.location.href = "index.html"; 
             } else {
-                alert("密碼錯誤！");
+                alert(ui.error_pwd);
             }
         } else {
-            alert("帳號不存在！");
+            alert(ui.error_no_user);
         }
     } catch (error) {
         console.error("Login Error:", error);
