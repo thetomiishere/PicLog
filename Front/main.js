@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        location.reload();
     });
 
     if (localStorage.getItem('theme') === 'dark') {
@@ -105,7 +106,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (currentCalendarID) window.location.hash = `#/calendar/${currentCalendarID}`;
         else if (currentFreqID) window.location.hash = `#/frequency/${currentFreqID}`;
     }
-
     // add calendar
     document.getElementById('addCalendarBtn').onclick = async () => {
         closeSidebar();
@@ -123,22 +123,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.hash = `#/calendar/${id}`;
         }
     };
-    // document.getElementById('addCalendarBtn').onclick = async () => {
-    //     closeSidebar();
-    //     const nameData = await getNameFromModal("新增照片 Calendar");
-    //     if (!nameData) return;
-    //     const id = nameData.name.toLowerCase().replace(/\s+/g, '_');
-        
-    //     const res = await onTable('calendars', id, { name: nameData.name }, session.username);
-    //     if (res.success) {
-    //         if (session.role !== 'admin') {
-    //             session.allowedTables.push(id);
-    //             localStorage.setItem("currentUser", JSON.stringify(session));
-    //         }
-    //         await updateSidebar();
-    //         window.location.hash = `#/calendar/${id}`;
-    //     }
-    // };
     // add frequency
     document.getElementById('addFreqBtn').onclick = async () => {
         closeSidebar();
@@ -156,22 +140,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.hash = `#/frequency/${id}`;
         }
     };
-    // document.getElementById('addFreqBtn').onclick = async () => {
-    //     closeSidebar();
-    //     const resModal = await getNameFromModal("新增頻率 Tracker", true);
-    //     if (!resModal) return;
-    //     const id = resModal.name.toLowerCase().replace(/\s+/g, '_');
-        
-    //     const res = await onTable('frequencies', id, { name: resModal.name, color: resModal.color }, session.username);
-    //     if (res.success) {
-    //         if (session.role !== 'admin') {
-    //             session.allowedTables.push(id);
-    //             localStorage.setItem("currentUser", JSON.stringify(session));
-    //         }
-    //         await updateSidebar();
-    //         window.location.hash = `#/frequency/${id}`;
-    //     }
-    // };
     // delete calendar
     document.getElementById('deleteCalendarBtn').onclick = async () => {
         if (!currentCalendarID) return;
@@ -187,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 window.location.hash = '';
                 window.location.reload();
             } else {
-                alert(ui.deleted_failed);alert(ui.deleted_success);
+                alert(ui.deleted_failed);alert(ui.deleted_failed);
             }
         }
     };
@@ -206,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 window.location.hash = '';
                 window.location.reload();
             } else {
-                alert(ui.deleted_failed);alert(ui.deleted_success);
+                alert(ui.deleted_failed);alert(ui.deleted_failed);
             }
         }
     };
@@ -216,7 +184,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         handleLogout();
     };
-
     // load correct page on initial load or hash change
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange();

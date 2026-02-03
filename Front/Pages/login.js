@@ -11,17 +11,20 @@ const accInput = document.getElementById('acc');
 const pwdInput = document.getElementById('pwd');
 const showPwdCheckbox = document.getElementById('showPwd');
 
+document.title = ui.login_title;
 document.getElementById('loginTitle').innerText = ui.login_title;
 loginBtn.innerText = ui.login_btn;
 accInput.placeholder = ui.account;
 pwdInput.placeholder = ui.password;
-showPwdCheckbox.innerText = ui.show_password;
 
+const showPwdLabel = document.querySelector('label[for="showPwd"]');
+if (showPwdLabel) {
+    showPwdLabel.innerText = ui.show_password;
+}
 showPwdCheckbox.onchange = () => {
     pwdInput.type = showPwdCheckbox.checked ? 'text' : 'password';
 };
 
-// 3. Hit Enter to Login
 [accInput, pwdInput].forEach(input => {
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -35,7 +38,6 @@ loginBtn.onclick = async () => {
     const password = document.getElementById('pwd').value.trim();
 
     try {
-        // Look for the document named "admin" (or whatever username was typed)
         const userRef = doc(db, "users", username);
         const userSnap = await getDoc(userRef);
 
@@ -43,7 +45,6 @@ loginBtn.onclick = async () => {
             const userData = userSnap.data();
 
             if (userData.password === password) {
-                // SUCCESS! 
                 const now = new Date().getTime();
                 localStorage.setItem("currentUser", JSON.stringify({
                     username: username,

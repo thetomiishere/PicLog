@@ -195,7 +195,6 @@ export function populateCell(dateString, imageUrl) {
 const handleRefresh = async () => {
     await updateDate(monthLabel, yearLabel, dateState, currentDisplayDate);
     await renderCalendar(dateState.year, dateState.month);
-    // Refresh the dropdown lists to show new 'selected' state
     populateOptions('monthOptions', 0, 11, true, dateState, currentDisplayDate, handleRefresh);
     populateOptions('yearOptions', 2020, 2030, false, dateState, currentDisplayDate, handleRefresh);
 };
