@@ -14,6 +14,8 @@ const translations = {
         no_permission: "No permission.",
         no_tables: "No PicLog available",
         user_created: "User Created!",
+        added_success: "Added successfully.",
+        added_failed: "Failed to add",
         deleted_success: "Deleted successfully.",
         deleted_failed: "Failed to delete",
         confirm_delete_table: "Are you sure you want to delete ",
