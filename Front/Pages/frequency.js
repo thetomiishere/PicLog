@@ -206,7 +206,7 @@ function applyIntensityStyle(cell, scale, hexColor) {
     
     let lightness;
     if (isDarkMode) {
-        lightness = 15 + (scale / 10) * 45; 
+        lightness = 60 - (scale / 10) * 45; 
     } else {
         lightness = 95 - (scale / 10) * 65;
     }
