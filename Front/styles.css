@@ -215,7 +215,13 @@ header {
 }
 
 #adminOnlyTools.add-container {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#adminOnlyTools.add-container .btn-style {
+    margin-bottom: 8px;
 }
 
 .sidebar {
@@ -232,6 +238,8 @@ header {
     display: flex;
     flex-direction: column;
     padding-bottom: env(safe-area-inset-bottom);
+    overflow-y: auto; 
+    overflow-x: hidden;
 }
 
 .sidebar.active {
@@ -255,19 +263,18 @@ header {
 
 .sidebar h2 {
     flex-shrink: 0;
-    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--accent);
     margin-bottom: 30px;
-    padding-left: 10px;
+    padding-left: 20px;
 }
 
 .sidebar nav {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    height: 100%;
+    /* flex: 1; */
+    height: auto;
 }
 
 .sidebar nav div {
@@ -300,7 +307,8 @@ header {
 .user-footer {
     display: flex;
     justify-content: space-between; 
-    align-items: center;
+    flex-direction: column;
+    align-items: left;
     padding: 10px 5px;
     margin-top: 5px;
 }
@@ -752,6 +760,8 @@ body.dark-mode #calendarDate::-webkit-calendar-picker-indicator {
         z-index: 1001;
         transition: left 0.3s ease-in-out;
         display: flex;
+        overflow-y: auto; 
+        overflow-x: hidden;
     }
     .sidebar.active {
         left: 0 !important;
@@ -765,6 +775,12 @@ body.dark-mode #calendarDate::-webkit-calendar-picker-indicator {
         background: rgba(0, 0, 0, 0.7);
         display: none;
         z-index: 1000;
+    }
+
+    .sidebar nav {
+        display: flex;
+        flex-direction: column;
+        height: auto; 
     }
     .sidebar-overlay.active {
         display: block !important;

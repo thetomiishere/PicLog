@@ -1,5 +1,5 @@
-import { db } from '../Configs/firebaseConfig.js';
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { auth, db } from '../Configs/firebaseConfig.js';
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { ui } from './dictionary.js';
 
 if (localStorage.getItem('theme') === 'dark') {
@@ -34,33 +34,22 @@ showPwdCheckbox.onchange = () => {
 });
 
 loginBtn.onclick = async () => {
-    const username = document.getElementById('acc').value.trim().toLowerCase();
-    const password = document.getElementById('pwd').value.trim();
+    const username = accInput.value.trim().toLowerCase();
+    const password = pwdInput.value.trim();
+    const virtualEmail = `${username}@piclog.app`;
 
     try {
-        const userRef = doc(db, "users", username);
-        const userSnap = await getDoc(userRef);
+        const userCredential = await signInWithEmailAndPassword(auth, virtualEmail, password);
+        
+        localStorage.setItem("currentUser", JSON.stringify({
+            username: username,
+            loginTime: new Date().getTime()
+        }));
 
-        if (userSnap.exists()) {
-            const userData = userSnap.data();
+        window.location.href = "index.html";
 
-            if (userData.password === password) {
-                const now = new Date().getTime();
-                localStorage.setItem("currentUser", JSON.stringify({
-                    username: username,
-                    role: userData.role,
-                    allowedTables: userData.allowedTables || [],
-                    loginTime: now
-                }));
-
-                window.location.href = "index.html"; 
-            } else {
-                alert(ui.error_pwd);
-            }
-        } else {
-            alert(ui.error_no_user);
-        }
     } catch (error) {
         console.error("Login Error:", error);
+        alert(ui.error_pwd || "Login Failed");
     }
 };

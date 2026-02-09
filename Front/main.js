@@ -1,57 +1,106 @@
+import { auth, db } from './Configs/firebaseConfig.js';
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { ui } from './Pages/dictionary.js';
-const session = JSON.parse(localStorage.getItem("currentUser"));
-const EXPIRATION_TIME = 24 * 60 * 60 * 1000;
-if (!session) {
-    window.location.href = "login.html";
-} else {
-    const now = new Date().getTime();
-    if (now - session.loginTime > EXPIRATION_TIME) {
-        alert(ui.session_expired);
-        localStorage.removeItem("currentUser");
-        window.location.href = "login.html";
-    } else {
-        console.log(`${ui.welcome}, ${session.username}`);
-    }
-}
-
 import { calendar } from './Pages/calendar.js';
 import { frequency } from './Pages/frequency.js';
-import { getAllCalendars, getAllFrequencies, onTable, newUser, deleteTable } from './mainService.js';
+import { getAllCalendars, getAllFrequencies, onTable, newUser, deleteTable, adminResetUserPassword } from './mainService.js';
 let currentCalendarID = "";
 let currentFreqID  = "";
+let session = null;
 
-export function handleLogout() {
-    localStorage.removeItem("currentUser");
-    window.location.href = "login.html";
+const EXPIRATION_TIME = 24 * 60 * 60 * 1000;
+const localData = JSON.parse(localStorage.getItem("currentUser"));
+if (localData) {
+    const now = new Date().getTime();
+    if (now - localData.loginTime > EXPIRATION_TIME) {
+        alert(ui.session_expired);
+        handleLogout();
+    }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-    const displayUsername = document.getElementById('displayUsername');
-    if (session && displayUsername) {
-        displayUsername.textContent = session.username;
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        localStorage.removeItem("currentUser");
+        if (!window.location.pathname.includes("login.html")) {
+            window.location.href = "login.html";
+        }
+    } else {
+        try {
+            const username = user.email.replace('@piclog.app', '');
+            const userSnap = await getDoc(doc(db, "users", username));
+            
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                session = {
+                    username: username,
+                    role: userData.role || 'user',
+                    allowedTables: userData.allowedTables || [],
+                    loginTime: new Date().getTime()
+                };
+                document.getElementById('displayUsername').textContent = username;
+                localStorage.setItem("currentUser", JSON.stringify(session));
+                initializeApp();
+            } else {
+                console.error("No user profile found in Firestore.");
+                handleLogout();
+            }
+        } catch (error) {
+            console.error("Auth State Error:", error);
+        }
     }
+});
+
+async function initializeApp() {
+    setupTheme();
+    setupSidebarToggle();
+    setupAdminTools();
+
+    document.getElementById('addCalendarBtn').innerText = ui.add_calendar;
+    document.getElementById('addFreqBtn').innerText = ui.add_freq;
+    document.getElementById('logoutBtn').innerText = ui.logout;
+
+    await updateSidebar();
+
+    window.addEventListener('hashchange', handleHashChange);
     
+    if (!window.location.hash || window.location.hash === "#") {
+        const calendars = await getAllCalendars(session);
+        const frequencies = await getAllFrequencies(session);
+        
+        if (calendars.length > 0) {
+            const firstId = calendars[0].id || calendars[0]; 
+            window.location.hash = `#/calendar/${firstId}`;
+        } else if (frequencies.length > 0) {
+            const firstId = frequencies[0].id || frequencies[0];
+            window.location.hash = `#/frequency/${firstId}`;
+        }
+    } else {
+        handleHashChange();
+    }
+
+    setupEventListeners();
+}
+
+function setupTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+    
+    themeToggle?.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+}
+
+function setupSidebarToggle() {
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
-    const themeToggle = document.getElementById('themeToggle');
-    const adminTools = document.getElementById('adminOnlyTools');
-    const addUserBtn = document.getElementById('addUserBtn');
+    const overlay = document.querySelector('.sidebar-overlay') || document.createElement('div');
     
-    // dark/light mode
-    themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        location.reload();
-    });
-
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
+    if (!overlay.parentElement) {
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
     }
-    // sidebar
-    const overlay = document.createElement('div');
-    overlay.className = 'sidebar-overlay';
-    document.body.appendChild(overlay);
 
     menuToggle?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -64,54 +113,61 @@ document.addEventListener("DOMContentLoaded", async () => {
             closeSidebar();
         }
     });
+}
 
-    document.getElementById('addCalendarBtn').style.display = 'block';
-    document.getElementById('addFreqBtn').style.display = 'block';
-    document.getElementById('deleteCalendarBtn').style.display = 'block';
-    document.getElementById('deleteFreqBtn').style.display = 'block';
+function setupAdminTools() {
+    const adminTools = document.getElementById('adminOnlyTools');
+    const addUserBtn = document.getElementById('addUserBtn');
+    const resetUserPwdBtn = document.getElementById('resetUserPwdBtn');
 
-    document.getElementById('addCalendarBtn').innerText = ui.add_calendar;
-    document.getElementById('addFreqBtn').innerText = ui.add_freq;
-    // add user
     if (session.role === 'admin') {
         if (adminTools) adminTools.style.display = 'block';
         if (addUserBtn) {
             addUserBtn.onclick = async () => {
                 closeSidebar();
-                const username = prompt(ui.new_user_prompt).toLowerCase().trim();
+                const username = prompt(ui.new_user_prompt)?.toLowerCase().trim();
                 const password = prompt(ui.new_pwd_prompt);
                 if (username && password) {
                     const res = await newUser(username, password, session.username);
                     if (res.success) alert(ui.user_created);
+                    else alert("Error: " + res.error);
+                }
+            };
+        }
+        if (resetUserPwdBtn) {
+            resetUserPwdBtn.onclick = async () => {
+                closeSidebar();
+                const username = prompt("Enter username to reset:").toLowerCase().trim();
+                const oldPassword = prompt("Enter user's CURRENT password:");
+                const newPassword = prompt("Enter user's NEW password:");
+
+                if (username && oldPassword && newPassword) {
+                    const res = await adminResetUserPassword(username, oldPassword, newPassword);
+                    if (res.success) {
+                        alert(ui.pwd_updated);
+                    } else {
+                        alert("Reset failed: " + res.error);
+                    }
                 }
             };
         }
     } else {
         if (adminTools) adminTools.style.display = 'none';
-        if (addUserBtn) addUserBtn.style.display = 'none';
     }
-    // sidebar
-    await updateSidebar();
+}
 
-    const allCals = await getAllCalendars();
-    const allFreqs = await getAllFrequencies();
-    
-    const allowedCals = session.role === 'admin' ? allCals : allCals.filter(id => session.allowedTables.includes(id));
-    const allowedFreqs = session.role === 'admin' ? allFreqs : allFreqs.filter(id => session.allowedTables.includes(id));
+function setupEventListeners() {
+    document.getElementById('logoutBtn').onclick = (e) => {
+        e.preventDefault();
+        handleLogout();
+    };
 
-    if (allowedCals.length > 0) currentCalendarID = allowedCals[0];
-    if (allowedFreqs.length > 0) currentFreqID = allowedFreqs[0];
-
-    if (!window.location.hash || window.location.hash === "#") {
-        if (currentCalendarID) window.location.hash = `#/calendar/${currentCalendarID}`;
-        else if (currentFreqID) window.location.hash = `#/frequency/${currentFreqID}`;
-    }
-    // add calendar
+    // add Calendar
     document.getElementById('addCalendarBtn').onclick = async () => {
         closeSidebar();
         const nameData = await getNameFromModal("New Photo Calendar");
         if (!nameData) return;
-        const id = nameData.name.toLowerCase().replace(/\s+/g, '_');
+        const id = generateUniqueId();
         
         const res = await onTable('calendars', id, { name: nameData.name }, session.username);
         if (res.success) {
@@ -123,12 +179,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.hash = `#/calendar/${id}`;
         }
     };
-    // add frequency
+
+    // add Frequency
     document.getElementById('addFreqBtn').onclick = async () => {
         closeSidebar();
         const resModal = await getNameFromModal("New Tracker", true);
         if (!resModal) return;
-        const id = resModal.name.toLowerCase().replace(/\s+/g, '_');
+        const id = generateUniqueId();
         
         const res = await onTable('frequencies', id, { name: resModal.name, color: resModal.color }, session.username);
         if (res.success) {
@@ -140,7 +197,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.hash = `#/frequency/${id}`;
         }
     };
-    // delete calendar
+
+    // delete Calendar
     document.getElementById('deleteCalendarBtn').onclick = async () => {
         if (!currentCalendarID) return;
         if (confirm(`${ui.sure_delete_table} "${currentCalendarID.toUpperCase()}"?`)) {
@@ -154,15 +212,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await updateSidebar();
                 window.location.hash = '';
                 window.location.reload();
-            } else {
-                alert(ui.deleted_failed);alert(ui.deleted_failed);
             }
         }
     };
-    // delete freq
+
+    // delete Frequency
     document.getElementById('deleteFreqBtn').onclick = async () => {
         if (!currentFreqID) return;
-        if (confirm(`${ui.sure_delete_table} "${currentCalendarID.toUpperCase()}"?`)) {
+        if (confirm(`${ui.sure_delete_table} "${currentFreqID.toUpperCase()}"?`)) {
             const res = await deleteTable('frequencies', currentFreqID, session.username);
             if (res.success) {
                 if (session.role !== 'admin') {
@@ -173,48 +230,99 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await updateSidebar();
                 window.location.hash = '';
                 window.location.reload();
-            } else {
-                alert(ui.deleted_failed);alert(ui.deleted_failed);
             }
         }
     };
-    // logout
-    document.getElementById('logoutBtn').innerText = ui.logout;
-    document.getElementById('logoutBtn').onclick = (e) => {
-        e.preventDefault();
-        handleLogout();
-    };
-    // load correct page on initial load or hash change
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange();
-    // window.addEventListener('load', handleHashChange);
-});
 
-function closeSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const container = document.querySelector('.container');
-    const overlay = document.querySelector('.sidebar-overlay');
+    // change password
+    const changePwdBtn = document.getElementById('changePwdBtn');
+    if (changePwdBtn) {
+        changePwdBtn.onclick = async (e) => {
+            e.preventDefault();
+            const newPassword = prompt(ui.new_pwd_prompt);
 
-    if (sidebar) sidebar.classList.remove('active');
-    if (container) container.classList.remove('sidebar-open');
-    if (overlay) overlay.classList.remove('active');
+            if (!newPassword) return;
+            if (newPassword.length < 6) {
+                alert(ui.pwd_too_short);
+                return;
+            }
+
+            try {
+                const user = auth.currentUser;
+                if (user) {
+                    await updatePassword(user, newPassword);
+                    alert(ui.pwd_updated);
+                }
+            } catch (error) {
+                if (error.code === 'auth/requires-recent-login') {
+                    alert(ui.reauth_required);
+                } else {
+                    alert(error.message);
+                }
+            }
+        };
+    }
+}
+
+export async function handleLogout() {
+    try {
+        await signOut(auth);
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
+    } catch (error) {
+        console.error("Logout failed", error);
+    }
+}
+
+function generateUniqueId() {
+    return Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+}
+
+async function updateSidebar() {
+    const sidebarMenu = document.getElementById('sidebarMenu');
+    if (!sidebarMenu || !session) return;
+    sidebarMenu.innerHTML = '<p style="padding:10px; opacity:0.5;">Loading...</p>';
+    
+    const [calendars, frequencies] = await Promise.all([
+        getAllCalendars(session),
+        getAllFrequencies(session)
+    ]);
+
+    sidebarMenu.innerHTML = '';
+    
+    calendars.forEach(item => {
+        const div = document.createElement('div');
+        div.innerHTML = `<a href="#/calendar/${item.id}" data-id="${item.id}" class="nav-link">${item.name}</a>`;
+        sidebarMenu.appendChild(div);
+    });
+
+    frequencies.forEach(item => {
+        const div = document.createElement('div');
+        div.innerHTML = `<a href="#/frequency/${item.id}" data-id="${item.id}" class="nav-link">${item.name}</a>`;
+        sidebarMenu.appendChild(div);
+    });
 }
 
 function handleHashChange() {
     const hash = window.location.hash;
-    if (!hash || hash === "#") return;
+    if (!hash || hash === "#" || !session) return;
+
     const titleDisplay = document.getElementById('currentPageTitle');
     const targetId = decodeURIComponent(hash.split('/').pop());
-    const cleanTitle = targetId.replace(/_/g, ' ').toUpperCase();
-    const activeNavLink = document.querySelector(`.nav-link[data-id="${targetId}"]`);
-    if (titleDisplay) {
-        titleDisplay.textContent = activeNavLink ? activeNavLink.textContent : cleanTitle;
-    }
-
+    
     if (session.role !== 'admin' && !session.allowedTables.includes(targetId)) {
         alert(ui.no_permission);
         window.location.hash = "";
         return;
+    }
+
+    const activeNavLink = document.querySelector(`.nav-link[data-id="${targetId}"]`);
+    if (titleDisplay) {
+        if (activeNavLink) {
+            titleDisplay.textContent = activeNavLink.textContent;
+        } else {
+            titleDisplay.textContent = targetId.replace(/_/g, ' ').toUpperCase();
+        }
     }
 
     if (hash.startsWith('#/calendar/')) {
@@ -239,50 +347,22 @@ function showSection(section) {
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.toggle('active', link.getAttribute('data-id') === activeId);
     });
-
-    /*
-    const tapeFilePage = document.getElementById('tapeFilePage');
-    if (tapeFilePage) tapeFilePage.style.display = 'none';
-    */
 }
 
-async function updateSidebar() {
-    const sidebarMenu = document.getElementById('sidebarMenu');
-    if (!sidebarMenu || !session) return;
-
-    sidebarMenu.innerHTML = '';
-    const [allCals, allFreqs] = await Promise.all([
-        getAllCalendars(),
-        getAllFrequencies()
-    ]);
-    // const allCals = await getAllCalendars();
-    // const allFreqs = await getAllFrequencies();
-
-    const calendars = session.role === 'admin' ? allCals : allCals.filter(id => session.allowedTables.includes(id));
-    const frequencies = session.role === 'admin' ? allFreqs : allFreqs.filter(item => session.allowedTables.includes(item.id));
-
-    if (calendars.length === 0 && frequencies.length === 0) {
-        sidebarMenu.innerHTML = `<p style="padding:10px; font-size:0.8rem; opacity:0.5;">${ui.no_tables}</p>`;
-        return;
-    }
-
-    calendars.forEach(id => {
-        const div = document.createElement('div');
-        div.innerHTML = `<a href="#/calendar/${id}" data-section="calendar" data-id="${id}" class="nav-link">${id.toUpperCase()}</a>`;
-        sidebarMenu.appendChild(div);
-    });
-
-    frequencies.forEach(item => {
-        const div = document.createElement('div');
-        div.innerHTML = `<a href="#/frequency/${item.id}" data-section="frequency" data-id="${item.id}" class="nav-link">${item.name}</a>`;
-        sidebarMenu.appendChild(div);
-    });
+function closeSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
 }
 
 function getNameFromModal(title, showColor = false) {
     const modal = document.getElementById('createModal');
     const nameInput = document.getElementById('newInputName');
     const colorInput = document.getElementById('newInputColor');
+    const confirmBtn = document.getElementById('confirmCreateBtn');
+    const cancelBtn = document.getElementById('cancelCreateBtn');
+
     document.getElementById('createModalTitle').textContent = title;
     document.getElementById('colorPickerContainer').style.display = showColor ? "block" : "none";
     
@@ -291,14 +371,14 @@ function getNameFromModal(title, showColor = false) {
     nameInput.focus();
 
     return new Promise((resolve) => {
-        document.getElementById('confirmCreateBtn').onclick = () => {
+        confirmBtn.onclick = () => {
             const name = nameInput.value.trim();
             if (name) {
                 modal.style.display = "none";
                 resolve({ name, color: colorInput.value });
             }
         };
-        document.getElementById('cancelCreateBtn').onclick = () => {
+        cancelBtn.onclick = () => {
             modal.style.display = "none";
             resolve(null);
         };

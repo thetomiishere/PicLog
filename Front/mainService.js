@@ -1,23 +1,48 @@
-import { db } from './Configs/firebaseConfig.js';
+import { secondaryAuth, db } from './Configs/firebaseConfig.js';
+import { createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { setDoc, getDocs, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { setDoc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-export async function getAllCalendars() {
+
+export async function getAllCalendars(session) {
     try {
-        const response = await getDocs(collection(db, "calendars"));
-        return response.docs.map(doc => doc.id);
+        if (!session) return [];
+        
+        if (session.role === 'admin') {
+            const response = await getDocs(collection(db, "calendars"));
+            return response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } 
+        
+        const promises = (session.allowedTables || []).map(id => getDoc(doc(db, "calendars", id)));
+        const snaps = await Promise.all(promises);
+        
+        return snaps
+            .filter(s => s.exists())
+            .map(s => ({ id: s.id, ...s.data() }));
     } catch (err) {
         console.error("Error fetching calendars:", err);
         return [];
     }
 }
 
-export async function getAllFrequencies() {
+export async function getAllFrequencies(session) {
     try {
-        const response = await getDocs(collection(db, "frequencies"));
-        return response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (!session) return [];
+
+        if (session.role === 'admin') {
+            const response = await getDocs(collection(db, "frequencies"));
+            return response.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+        
+        const promises = (session.allowedTables || []).map(id => getDoc(doc(db, "frequencies", id)));
+        const snaps = await Promise.all(promises);
+        
+        return snaps
+            .filter(s => s.exists())
+            .map(s => ({ id: s.id, ...s.data() }));
+        
     } catch (err) {
-        console.error("Error fetching calendars:", err);
+        console.error("Error fetching frequencies:", err);
         return [];
     }
 }
@@ -65,19 +90,37 @@ export async function deleteTable(collectionName, id, username) {
     }
 }
 
-export async function newUser(username, password, adminUsername, role = 'user') {
+export async function newUser(username, password) {
     try {
-        const userRef = doc(db, 'users', username.toLowerCase());
-        await setDoc(userRef, {
-            username: username.toLowerCase(),
-            password: password,
-            role: role,
+        const email = `${username}@piclog.app`;
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const uid = userCredential.user.uid;
+
+        await setDoc(doc(db, "users", username), {
+            uid: uid,
+            email: email,
+            role: "user",
             allowedTables: [],
-            adminAuthor: adminUsername
+            createdAt: new Date().toISOString()
         });
+
+        await signOut(secondaryAuth);
+
         return { success: true };
     } catch (error) {
-        console.error("Error creating user:", error);
-        return { success: false, error };
+        console.error("User Creation Error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function adminResetUserPassword(username, oldPassword, newPassword) {
+    try {
+        const email = `${username}@piclog.app`;
+        const userCred = await signInWithEmailAndPassword(secondaryAuth, email, oldPassword);
+        await updatePassword(userCred.user, newPassword);
+        await signOut(secondaryAuth);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
     }
 }

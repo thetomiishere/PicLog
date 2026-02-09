@@ -18,7 +18,7 @@
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <h2>Menu</h2>
+            <h2 id="displayUsername" class="user-name"></h2>
             <nav>
                 <div class="top-actions">
                     <div id="sidebarMenu">
@@ -35,17 +35,18 @@
         
                 <div class="bottom-actions">
                     <div class="add-container">
-                        <button id="addCalendarBtn" class="btn-style">+ New Calendar</button>
+                        <button id="addCalendarBtn" class="btn-style"></button>
                     </div>
                     <div class="add-container">
-                        <button id="addFreqBtn" class="btn-style">+ New Frequency</button>
+                        <button id="addFreqBtn" class="btn-style"></button>
                     </div>
                     <div id="adminOnlyTools" style="display: none;" class="add-container">
                         <button id="addUserBtn" class="btn-style">＋ Create New User</button>
+                        <button id="resetUserPwdBtn" class="btn-style">Reset User Password</button>
                     </div>
                     <div class="logout-container">
                         <div class="user-footer">
-                            <span id="displayUsername" class="user-name"></span>
+                            <a href="#" id="changePwdBtn" class="footer-link">Change Password</a>
                             <a href="#" id="logoutBtn" class="logout-link">Logout</a>
                         </div>
                     </div>
