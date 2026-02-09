@@ -89,6 +89,7 @@ function setupTheme() {
     themeToggle?.addEventListener('click', () => {
         const isDark = document.body.classList.toggle('dark-mode');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        location.reload();
     });
 }
 
