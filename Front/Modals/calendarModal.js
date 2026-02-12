@@ -5,6 +5,7 @@ export function addwDate(calendarID, dateString, username) {
     const modal = document.getElementById('uploadModal');
     const logDateInput = document.getElementById('logDate');
     const saveBtn = document.getElementById('saveBtn');
+    const noUpdateBtn = document.getElementById('noUpdateBtn');
     const cancelBtn = document.getElementById('closeModal');
     const modalTitle = modal.querySelector('h3');
 
@@ -16,6 +17,18 @@ export function addwDate(calendarID, dateString, username) {
     modal.style.display = "flex";
 
     return new Promise((resolve) => {
+        noUpdateBtn.onclick = async () => {
+            const result = await addCell(calendarID, logDateInput.value, "none", username);
+            if (result.success) {
+                resetInput();
+                modal.style.display = "none";
+                alert(ui.added_success);
+                resolve(result);
+            } else {
+                alert(ui.added_failed);
+            }
+        };
+
         saveBtn.onclick = async () => {
             const selectedDate = logDateInput.value;
             const photoInput = document.getElementById('photoInput');

@@ -172,23 +172,21 @@ export async function renderCalendar(year, month) {
 
 export function populateCell(dateString, imageUrl) {    
     const targetCell = document.getElementById(`cell-${dateString}`);
+    if (!targetCell) return;
 
-    if (targetCell && imageUrl) {
-        targetCell.style.backgroundImage = `url(${imageUrl})`;
+    const dateSpan = targetCell.querySelector('span');
+    const isDark = document.body.classList.contains('dark-mode');
+
+    if (imageUrl) {
         targetCell.setAttribute('data-has-photo', 'true');
-
-        const dateSpan = targetCell.querySelector('span');
         if (dateSpan) dateSpan.style.display = 'none';
-        
-        if (document.body.classList.contains('dark-mode')) {
-            targetCell.style.backgroundColor = '#000000';
-        } else {
-            targetCell.style.backgroundColor = '#ffffff';
-        }
-    } else if (targetCell) {
+        targetCell.style.backgroundColor = isDark ? '#000000' : '#ffffff';
+        targetCell.style.backgroundImage = (imageUrl === "none") ? 'none' : `url(${imageUrl})`;
+    } else {
+        targetCell.removeAttribute('data-has-photo');
+        if (dateSpan) dateSpan.style.display = 'block';
         targetCell.style.backgroundImage = 'none';
         targetCell.style.backgroundColor = '';
-        targetCell.removeAttribute('data-has-photo');
     }
 }
 
