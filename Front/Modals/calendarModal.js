@@ -10,6 +10,7 @@ export function addwDate(calendarID, dateString, username) {
     const modalTitle = modal.querySelector('h3');
 
     if (modalTitle) modalTitle.textContent = ui.upload_photo_title;
+    noUpdateBtn.textContent = ui.no_update_btn;
     saveBtn.textContent = ui.save_btn;
     cancelBtn.textContent = ui.cancel_btn;
     
